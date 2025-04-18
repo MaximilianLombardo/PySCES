@@ -1,0 +1,99 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, dev ]
+  pull_request:
+    branches: [ main, dev ]
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        python-version: ['3.10']
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Conda
+      uses: conda-incubator/setup-miniconda@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+        channels: conda-forge,bioconda,defaults
+        channel-priority: strict
+        activate-environment: pysces
+        environment-file: environment.yml
+    
+    - name: Install OpenMP (macOS)
+      if: runner.os == 'macOS'
+      shell: bash -l {0}
+      run: |
+        conda install -y -c conda-forge llvm-openmp
+        echo "CPPFLAGS=-I$CONDA_PREFIX/include" >> $GITHUB_ENV
+        echo "LDFLAGS=-L$CONDA_PREFIX/lib" >> $GITHUB_ENV
+    
+    - name: Install OpenMP (Linux)
+      if: runner.os == 'Linux'
+      shell: bash -l {0}
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libomp-dev
+    
+    - name: Install package
+      shell: bash -l {0}
+      run: pip install -e ".[dev]"
+    
+    - name: Run tests
+      shell: bash -l {0}
+      run: pytest -xvs tests/
+    
+    - name: Run ARACNe example with synthetic data
+      shell: bash -l {0}
+      run: |
+        cd examples
+        python aracne_census_example.py
+
+  build-wheels:
+    name: Build wheels on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      
+      - name: Install OpenMP (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          brew install libomp
+          echo "CPPFLAGS=-I/usr/local/opt/libomp/include" >> $GITHUB_ENV
+          echo "LDFLAGS=-L/usr/local/opt/libomp/lib" >> $GITHUB_ENV
+      
+      - name: Install OpenMP (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libomp-dev
+      
+      - name: Install build dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install build wheel setuptools pybind11
+      
+      - name: Build wheels
+        run: |
+          python -m build --wheel
+      
+      - name: Store wheels
+        uses: actions/upload-artifact@v3
+        with:
+          name: wheels-${{ matrix.os }}
+          path: dist/*.whl
