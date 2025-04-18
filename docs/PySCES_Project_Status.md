@@ -14,18 +14,31 @@ PySCES (Python Single-Cell Expression System) is a Python port of the PISCES sin
 - ✅ License and contribution guidelines added
 - ✅ Conda environment specification created
 - ✅ Test installation script implemented
+- ✅ Modern src-layout package structure implemented
 
 #### Data Layer
 - ✅ Basic data loading functionality implemented
 - ✅ Census integration with direct loading approach
 - ✅ Data preprocessing functions implemented
 - ✅ Rank transformation for ARACNe implemented
+- ✅ Verified compatibility with AnnData objects from CELLxGENE
 
 #### ARACNe Module
 - ✅ Basic ARACNe framework created
 - ✅ C++ extension structure set up
-- ✅ Placeholder implementation for network inference
 - ✅ Regulon conversion utilities implemented
+- ✅ Python fallback implementation created
+- ✅ Verified functionality with real biological data
+- ✅ Implemented sampling for large datasets
+
+#### ARACNe C++ Implementation
+- ✅ Mutual information calculation implemented and fixed
+- ✅ Data processing inequality (DPI) algorithm implemented
+- ✅ Bootstrapping for network robustness implemented
+- ✅ Consensus network generation implemented
+- ✅ OpenMP parallelization added with cross-platform compatibility
+- ✅ Robust error handling for edge cases added
+- ✅ Numerical stability improvements implemented
 
 #### VIPER Module
 - ✅ Regulon class implemented
@@ -41,42 +54,69 @@ PySCES (Python Single-Cell Expression System) is a Python port of the PISCES sin
 #### Visualization Module
 - ✅ UMAP visualization implemented
 - ✅ Heatmap generation implemented
-- ✅ Master regulator plotting implemented
+- ✅ Network visualization utilities added
 
 ### In Progress Components
+
+#### C++ Extension Integration
+- ⚠️ C++ extensions need to be properly compiled during installation
+- ⚠️ Package configuration needs to be updated to include C++ extensions
+- ⚠️ Platform-specific installation instructions needed
+- 🔲 Need to add comprehensive tests to verify C++ extension usage
 
 #### Census Integration
 - ✅ Direct loading approach implemented (`read_census_direct`)
 - ⚠️ Batch processing approach (`read_census`) has compatibility issues with the latest cellxgene-census API
 - 🔲 Need to update batch processing to use TileDB-SOMA-ML API
 
-#### ARACNe C++ Implementation
-- ⚠️ Mutual information calculation partially implemented
-- ⚠️ Data processing inequality (DPI) algorithm partially implemented
-- ⚠️ Bootstrapping for network robustness partially implemented
-- 🔲 Need to complete and optimize C++ implementation
+#### VIPER Implementation
+- 🟡 Design and implement core VIPER algorithm based on PISCES
+- 🟡 Create data structures for regulons and gene sets
+- 🟡 Implement analytical methods (single-sample, multi-sample)
+- 🟡 Add integration with ARACNe output
+- 🟡 Implement AnnData compatibility
 
 ### Pending Components
 
 #### Testing
-- 🔲 Add comprehensive unit tests
+- ✅ Basic unit tests for ARACNe added
+- ✅ CI/CD pipeline for automated testing implemented
+- ✅ Verified ARACNe functionality with real biological data from CELLxGENE
+- 🔲 Add comprehensive unit tests for all components
 - 🔲 Create integration tests for end-to-end workflows
 - 🔲 Add performance benchmarks
-- 🔲 Implement CI/CD pipeline for automated testing
+- 🔲 Create test datasets with known regulatory relationships
 
 #### Documentation
+- ✅ Example script for ARACNe with Census data added
+- ✅ Created test script for real data validation
 - 🔲 Complete API documentation
 - 🔲 Add tutorials for common use cases
 - 🔲 Create user guide
 - 🔲 Add developer guide
+- 🔲 Document algorithm parameters and their effects
 
-#### GPU Acceleration (Phase 3)
-- 🔲 Implement GPU-accelerated mutual information calculation
-- 🔲 Add GPU support for network pruning
+#### Package Distribution
+- ✅ Package structure and dependencies updated
+- 🔲 Set up PyPI distribution
+- 🔲 Create conda package
+- 🔲 Add versioning and release process
+- 🔲 Create binary wheels for common platforms
+
+#### Performance Optimization
+- 🟡 Optimize ARACNe for large datasets
+- 🟡 Implement sampling strategies for MI calculation
+- 🟡 Add parallel processing for CPU
+- 🟡 Optimize memory usage for large datasets
+
+#### MLX/GPU Acceleration (Future Phase)
+- 🔲 Evaluate MLX for GPU-accelerated mutual information calculation
+- 🔲 Implement MLX-based matrix operations
+- 🔲 Add GPU support for bootstrapping
 - 🔲 Optimize GPU memory usage
 - 🔲 Create benchmarks comparing CPU and GPU performance
 
-## Implementation Challenges
+## Implementation Challenges and Solutions
 
 ### Census Integration
 
@@ -84,7 +124,7 @@ The CELLxGENE Census integration has presented several challenges:
 
 1. **API Compatibility**: The experimental ML module in cellxgene-census is being deprecated in favor of TileDB-SOMA-ML.
    - Current solution: Implemented `read_census_direct` using the stable `get_anndata` API
-   - Future work: Update batch processing approach to use TileDB-SOMA-ML
+   - Future work: Update batch processing approach to use TileDB-SOMA-ML API
 
 2. **Memory Efficiency**: Processing large Census datasets requires efficient memory management.
    - Current solution: Direct loading with filtering
@@ -94,21 +134,41 @@ The CELLxGENE Census integration has presented several challenges:
    - Current solution: Added comprehensive error handling and dependency checks
    - Future work: Add more detailed error messages and suggestions
 
-### ARACNe Implementation
+### ARACNe C++ Implementation
 
-The ARACNe implementation has faced several challenges:
+The ARACNe C++ implementation has faced several challenges that have been addressed:
 
-1. **C++ Integration**: Integrating C++ extensions with Python.
-   - Current solution: Basic pybind11 setup with placeholder implementation
-   - Future work: Complete C++ implementation with proper memory management
+1. **Mutual Information Calculation**: The original implementation had issues with edge cases.
+   - Solution: Fixed perfect correlation/anti-correlation detection, constant array handling, and added robust error handling
 
-2. **Cross-Platform Compatibility**: Ensuring the code works across different platforms.
-   - Current solution: Platform-specific compiler flags in setup.py
-   - Future work: More comprehensive platform detection and configuration
+2. **Numerical Stability**: Floating-point precision issues caused incorrect results.
+   - Solution: Added checks for small variances, division by zero, and logarithms of small numbers
 
-3. **Performance Optimization**: Balancing speed and memory usage.
-   - Current solution: Basic OpenMP parallelization
-   - Future work: Advanced memory optimization and algorithm improvements
+3. **Segmentation Faults**: Memory access issues caused crashes.
+   - Solution: Added proper memory management, bounds checking, and input validation
+
+4. **Cross-Platform Compatibility**: Ensuring the code works across different platforms.
+   - Solution: Added conditional compilation for OpenMP on macOS, proper type casting, and platform-specific optimizations
+
+5. **Performance with Large Datasets**: The MI calculation is computationally intensive for large datasets.
+   - Solution: Implemented sampling strategies to reduce computation time while maintaining accuracy
+   - Future work: Explore MLX/GPU acceleration for further performance improvements
+
+### C++ Extension Integration
+
+Current challenges with C++ extension integration:
+
+1. **Compilation During Installation**: Ensuring extensions are properly compiled.
+   - Current status: Extensions compile but may not be properly included in the package
+   - Future work: Update setup.py and pyproject.toml to ensure proper compilation
+
+2. **Platform-Specific Issues**: Different platforms require different compilation flags.
+   - Current status: Basic platform detection implemented
+   - Future work: Add more comprehensive platform detection and configuration
+
+3. **Python Fallback**: Ensuring a robust fallback when C++ extensions are not available.
+   - Current status: Complete Python implementation created
+   - Future work: Ensure seamless fallback with appropriate warnings
 
 ## Project Structure
 
@@ -118,31 +178,45 @@ The project is organized as follows:
 pysces/
 ├── .github/                      # GitHub Actions workflows
 ├── docs/                         # Documentation
+│   ├── MIGRATION_GUIDE.md        # Guide for migrating from old structure
+│   └── ROADMAP.md                # Development roadmap
 ├── examples/                     # Example notebooks
-├── pysces/                       # Main package
-│   ├── __init__.py
-│   ├── data/                     # Data handling
-│   │   ├── __init__.py
-│   │   ├── loaders.py            # Various data loaders
-│   │   ├── census.py             # Census integration
-│   │   └── preprocessing.py      # QC and preprocessing
-│   ├── aracne/                   # ARACNe implementation
-│   │   ├── __init__.py
-│   │   ├── core.py               # Python interface
-│   │   ├── _cpp/                 # C++ extensions
-│   │   └── gpu.py                # GPU implementation (Phase 3)
-│   ├── viper/                    # VIPER implementation
-│   │   ├── __init__.py
-│   │   ├── regulons.py           # Regulon handling
-│   │   └── activity.py           # Activity inference
-│   ├── analysis/                 # Analysis tools
-│   │   ├── __init__.py
-│   │   ├── clustering.py         # Clustering methods
-│   │   └── master_regulators.py  # MR identification
-│   └── plotting/                 # Visualization
+│   ├── aracne_census_example.py  # Example using ARACNe with Census
+│   ├── basic_workflow.ipynb      # Basic workflow notebook
+│   └── test_installation.py      # Script to test installation
+├── src/                          # Source code (src-layout)
+│   └── pysces/                   # Main package
 │       ├── __init__.py
-│       └── plots.py              # Standard plots
+│       ├── data/                 # Data handling
+│       │   ├── __init__.py
+│       │   ├── loaders.py        # Various data loaders
+│       │   ├── census.py         # Census integration
+│       │   └── preprocessing.py  # QC and preprocessing
+│       ├── aracne/               # ARACNe implementation
+│       │   ├── __init__.py
+│       │   ├── core.py           # Python interface
+│       │   ├── _cpp/             # C++ extensions
+│       │   │   ├── aracne_ext.cpp # C++ implementation
+│       │   │   └── include/      # C++ headers
+│       │   └── gpu.py            # GPU implementation (Future Phase)
+│       ├── viper/                # VIPER implementation
+│       │   ├── __init__.py
+│       │   ├── regulons.py       # Regulon handling
+│       │   └── activity.py       # Activity inference
+│       ├── analysis/             # Analysis tools
+│       │   ├── __init__.py
+│       │   ├── clustering.py     # Clustering methods
+│       │   └── master_regulators.py # MR identification
+│       └── plotting/             # Visualization
+│           ├── __init__.py
+│           └── plots.py          # Standard plots
 ├── tests/                        # Test suite
+│   ├── test_aracne.py            # ARACNe tests
+│   ├── test_data.py              # Data handling tests
+│   └── test_aracne_ext.py        # C++ extension tests
+├── scripts/                      # Utility scripts
+│   └── check_extensions.py       # Script to check C++ extensions
+├── backup/                       # Backup of old structure
 ├── setup.py                      # Package metadata
 ├── pyproject.toml                # Build system config
 ├── environment.yml               # Conda environment
@@ -152,23 +226,26 @@ pysces/
 
 ## Next Steps
 
-### Short-term (1-2 weeks)
-1. Fix Census batch processing approach or document limitations
-2. Complete ARACNe C++ implementation for mutual information calculation
+### Immediate Priorities (0-2 weeks)
+1. Complete VIPER algorithm implementation with AnnData compatibility
+2. Fix C++ extension integration to ensure proper compilation during installation
+3. Update package configuration to correctly include C++ extensions
+4. Add comprehensive tests to verify C++ extension usage
+5. Create platform-specific installation instructions
+
+### Short-term (2-4 weeks)
+1. Implement MLX/GPU acceleration for mutual information calculation
+2. Fix Census batch processing approach or document limitations
 3. Add comprehensive tests for core functionality
 4. Update documentation with current status and usage examples
+5. Set up PyPI distribution
 
-### Medium-term (1-2 months)
+### Medium-term (1-3 months)
 1. Implement advanced analysis tools
-2. Optimize performance for large datasets
+2. Further optimize performance for large datasets
 3. Add comprehensive documentation and tutorials
-4. Set up CI/CD pipeline for automated testing
-
-### Long-term (3+ months)
-1. Implement GPU acceleration for ARACNe
-2. Add support for distributed computing
-3. Create web interface for interactive analysis
-4. Integrate with other single-cell analysis tools
+4. Create conda package and binary wheels
+5. Develop visualization tools for regulatory networks
 
 ## Reference Implementations
 

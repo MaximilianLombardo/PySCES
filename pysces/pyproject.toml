@@ -1,10 +1,11 @@
 [build-system]
-requires = ["setuptools>=45", "wheel", "cmake>=3.24", "pybind11>=2.10.0"]
+requires = ["setuptools>=45", "wheel", "pybind11>=2.10.0"]
 build-backend = "setuptools.build_meta"
 
 [tool.pytest]
 testpaths = ["tests"]
 python_files = "test_*.py"
+pythonpath = ["src"]
 
 [tool.black]
 line-length = 88

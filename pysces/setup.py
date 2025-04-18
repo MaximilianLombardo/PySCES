@@ -2,7 +2,6 @@ import os
 import sys
 import platform
 from setuptools import setup, find_packages, Extension
-from pybind11.setup_helpers import Pybind11Extension, build_ext
 
 # Detect the platform
 system = platform.system()
@@ -36,24 +35,41 @@ else:  # Linux and other Unix-like systems
     extra_compile_args.extend(["-fopenmp"])
     extra_link_args.extend(["-fopenmp"])
 
-ext_modules = [
-    Pybind11Extension(
-        "pysces.aracne._cpp.aracne_ext",
-        ["pysces/aracne/_cpp/aracne_ext.cpp"],
-        include_dirs=["pysces/aracne/_cpp/include"],
-        extra_compile_args=extra_compile_args,
-        extra_link_args=extra_link_args,
-    ),
-]
+# Define the extension module with error handling
+try:
+    import pybind11
+    pybind11_include = pybind11.get_include()
+
+    ext_modules = [
+        Extension(
+            'pysces.aracne._cpp.aracne_ext',
+            ['src/pysces/aracne/_cpp/aracne_ext.cpp'],
+            include_dirs=[
+                pybind11_include,
+                'src/pysces/aracne/_cpp/include'
+            ],
+            language='c++',
+            extra_compile_args=extra_compile_args,
+            extra_link_args=extra_link_args,
+        ),
+    ]
+    print("C++ extensions enabled.")
+except Exception as e:
+    print(f"Error setting up C++ extensions: {str(e)}")
+    print("Falling back to Python-only installation")
+    ext_modules = []
 
 setup(
     name="pysces",
-    version="0.1.0",
+    version="0.2.0",  # Increment version for directory structure change
     description="Python Single-Cell Expression System",
     author="PySCES Team",
-    packages=find_packages(),
+    package_dir={"": "src"},
+    packages=find_packages(where="src"),
     ext_modules=ext_modules,
-    cmdclass={"build_ext": build_ext},
+    # Temporarily disable build_ext
+    # cmdclass={"build_ext": build_ext},
+
     python_requires=">=3.10",
     install_requires=[
         "numpy>=1.22",

@@ -13,16 +13,13 @@ approach for loading Census data. The batch processing approach (read_census) is
 currently experimental and may not work with the latest cellxgene-census API.
 """
 
-# Use direct imports instead of package imports
-import sys
+# Standard imports
 import os
-# Add the parent directory to the path so we can import the pysces modules
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+import sys
 
-# Import directly from modules
-from pysces.data.census import read_census_direct
-from pysces.data.preprocessing import preprocess_data
-from pysces.aracne.core import ARACNe, aracne_to_regulons
+# Import from the pysces package
+import pysces
+from pysces import read_census_direct, preprocess_data, ARACNe, aracne_to_regulons
 
 # Standard imports
 import numpy as np

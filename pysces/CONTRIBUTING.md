@@ -69,6 +69,33 @@ Please include the following in your pull request:
    pytest
    ```
 
+## Package Structure
+
+PySCES uses a modern "src-layout" package structure:
+
+```
+pysces/
+├── src/                         # Source directory
+│   └── pysces/                  # Main package
+│       ├── data/                # Data handling
+│       ├── aracne/              # ARACNe implementation
+│       ├── viper/               # VIPER implementation
+│       ├── analysis/            # Analysis tools
+│       └── plotting/            # Visualization
+├── tests/                       # Test suite
+├── examples/                    # Example notebooks
+```
+
+This structure has several advantages:
+- Prevents import confusion during development
+- Makes the installation process more reliable
+- Clearly separates package code from project files
+
+When developing, remember:
+- All package code goes in `src/pysces/`
+- Import the package as `import pysces` (not `import pysces.pysces`)
+- Tests should import from the installed package, not using relative imports
+
 ## Coding Standards
 
 - Follow PEP 8 style guidelines

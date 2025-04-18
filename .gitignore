@@ -1,10 +1,13 @@
 # Python
 __pycache__/
+**/__pycache__/
 *.py[cod]
 *$py.class
 *.so
+**/*.so
 .Python
 build/
+**/build/
 develop-eggs/
 dist/
 downloads/
@@ -76,3 +79,54 @@ venv.bak/
 *.tsv
 *.mtx
 *.rds
+*.parquet
+*.zarr
+*.loom
+*.hdf5
+*.h5
+
+# C++ build artifacts
+*.o
+*.out
+*.a
+*.dll
+*.dylib
+*.exe
+*.obj
+*.lib
+*.exp
+*.pdb
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+
+# Demo data
+tabula_sapiens_testis.h5ad
+*_network.csv
+test_aracne_real_data.py
+
+# Reference data files
+references/**/*.h5ad
+references/**/*.rda
+references/**/*.zip
+references/**/*.tgz
+references/**/*.jar
+references/**/*.rds
+references/**/*.tsv
+references/**/*.gmt
+references/**/*.gz
+references/**/*.ipynb
+
+# Temporary files
+tmp/
+temp/
+.tmp/
+.temp/
+*.tmp
+*.temp
+*.bak
+
+# Logs
+logs/
+*.log

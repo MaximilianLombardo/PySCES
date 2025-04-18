@@ -116,27 +116,29 @@ For detailed documentation, see the [examples](examples/) directory. Key example
 
 ```
 pysces/
-├── pysces/                      # Main package
-│   ├── data/                    # Data handling
-│   │   ├── loaders.py           # Data loaders
-│   │   ├── census.py            # Census integration
-│   │   └── preprocessing.py     # Data preprocessing
-│   ├── aracne/                  # ARACNe implementation
-│   │   ├── core.py              # Python interface
-│   │   └── _cpp/                # C++ extensions
-│   ├── viper/                   # VIPER implementation
-│   │   ├── regulons.py          # Regulon handling
-│   │   └── activity.py          # Activity inference
-│   ├── analysis/                # Analysis tools
-│   │   ├── clustering.py        # Clustering methods
-│   │   └── master_regulators.py # MR identification
-│   └── plotting/                # Visualization
-│       └── plots.py             # Standard plots
+├── src/                         # Source directory
+│   └── pysces/                  # Main package
+│       ├── data/                # Data handling
+│       │   ├── loaders.py       # Data loaders
+│       │   ├── census.py        # Census integration
+│       │   └── preprocessing.py # Data preprocessing
+│       ├── aracne/              # ARACNe implementation
+│       │   ├── core.py          # Python interface
+│       │   └── _cpp/            # C++ extensions
+│       ├── viper/               # VIPER implementation
+│       │   ├── regulons.py      # Regulon handling
+│       │   └── activity.py      # Activity inference
+│       ├── analysis/            # Analysis tools
+│       │   ├── clustering.py    # Clustering methods
+│       │   └── master_regulators.py # MR identification
+│       └── plotting/            # Visualization
+│           └── plots.py         # Standard plots
 ├── tests/                       # Test suite
 ├── examples/                    # Example notebooks
 ├── docs/                        # Documentation
 ├── environment.yml              # Conda environment
 ├── setup.py                     # Package metadata
+├── pyproject.toml               # Build configuration
 └── README.md                    # This file
 ```
 
@@ -151,6 +153,7 @@ PySCES is currently in active development. The following components are implemen
 - [x] Analysis tools (clustering, master regulators)
 - [x] Visualization
 - [x] Basic test suite
+- [x] Modern package structure with src layout
 
 The following components are in progress or pending:
 
