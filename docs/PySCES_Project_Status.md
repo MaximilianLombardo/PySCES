@@ -41,10 +41,12 @@ PySCES (Python Single-Cell Expression System) is a Python port of the PISCES sin
 - ✅ Numerical stability improvements implemented
 
 #### VIPER Module
-- ✅ Regulon class implemented
-- ✅ VIPER algorithm implemented
-- ✅ metaVIPER implementation added
-- ✅ Regulon pruning functionality added
+- ✅ Regulon and GeneSet classes implemented
+- ✅ VIPER algorithm implemented with AnnData compatibility
+- ✅ Core functions implemented (calculate_sig, viper_scores, viper_bootstrap, viper_null_model)
+- ✅ ARACNe integration implemented (aracne_to_regulons, aracne_to_viper)
+- ✅ Protein activity analysis utilities implemented (viper_similarity, viper_cluster)
+- ✅ Verified with real biological data from Tabula Sapiens
 
 #### Analysis Module
 - ✅ Basic clustering functionality implemented
@@ -69,12 +71,12 @@ PySCES (Python Single-Cell Expression System) is a Python port of the PISCES sin
 - ⚠️ Batch processing approach (`read_census`) has compatibility issues with the latest cellxgene-census API
 - 🔲 Need to update batch processing to use TileDB-SOMA-ML API
 
-#### VIPER Implementation
-- 🟡 Design and implement core VIPER algorithm based on PISCES
-- 🟡 Create data structures for regulons and gene sets
-- 🟡 Implement analytical methods (single-sample, multi-sample)
-- 🟡 Add integration with ARACNe output
-- 🟡 Implement AnnData compatibility
+#### Data Validation
+- 🟡 Implement formal validation of input data structure
+- 🟡 Add checks for raw counts vs. normalized data
+- 🟡 Implement quality control functions
+- 🟡 Add validation for sparse matrices
+- 🟡 Create comprehensive error messages
 
 ### Pending Components
 
@@ -227,17 +229,17 @@ pysces/
 ## Next Steps
 
 ### Immediate Priorities (0-2 weeks)
-1. Complete VIPER algorithm implementation with AnnData compatibility
-2. Fix C++ extension integration to ensure proper compilation during installation
-3. Update package configuration to correctly include C++ extensions
-4. Add comprehensive tests to verify C++ extension usage
+1. Implement formal validation of input data structure (raw counts vs. normalized data)
+2. Add comprehensive tests for the full pipeline (ARACNe → VIPER)
+3. Fix C++ extension integration to ensure proper compilation during installation
+4. Update documentation with current status and usage examples
 5. Create platform-specific installation instructions
 
 ### Short-term (2-4 weeks)
-1. Implement MLX/GPU acceleration for mutual information calculation
+1. Implement MLX/GPU acceleration for VIPER algorithm
 2. Fix Census batch processing approach or document limitations
-3. Add comprehensive tests for core functionality
-4. Update documentation with current status and usage examples
+3. Add comprehensive tests for edge cases and error handling
+4. Create end-to-end pipeline examples with real data
 5. Set up PyPI distribution
 
 ### Medium-term (1-3 months)

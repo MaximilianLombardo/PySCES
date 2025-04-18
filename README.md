@@ -44,6 +44,13 @@ PySCES is currently in active development. The following components are implemen
   - Python fallback implementation
   - Verified with real biological data from CELLxGENE
 
+- ✅ **VIPER Algorithm**: Core algorithm for inferring protein activity
+  - GeneSet and Regulon data structures
+  - Core VIPER functions (calculate_sig, viper_scores, viper_bootstrap, viper_null_model)
+  - ARACNe integration (aracne_to_regulons, aracne_to_viper)
+  - AnnData compatibility for single-cell analysis
+  - Verified with real biological data from Tabula Sapiens
+
 - ✅ **Data Handling**: Tools for loading and preprocessing data
   - Basic data loading functionality
   - Census integration with direct loading approach
@@ -55,23 +62,27 @@ PySCES is currently in active development. The following components are implemen
   - Clustering functionality
   - Master regulator identification
   - Similarity calculation functions
+  - Protein activity analysis
 
 - ✅ **Visualization**: Basic visualization tools
   - UMAP visualization
   - Heatmap generation
   - Network visualization utilities
+  - Protein activity visualization
 
 ## Current Development Focus
 
 We are currently focusing on the following areas:
 
-1. **VIPER Algorithm Implementation**: Implementing the VIPER algorithm for inferring transcription factor activity from gene expression data and regulatory networks.
+1. **Data Validation**: Implementing formal validation of input data structure (checking for raw counts vs. normalized data) and quality control functions.
 
-2. **Performance Optimization**: Optimizing the ARACNe algorithm for large datasets, including sampling strategies and memory optimization.
+2. **Performance Optimization**: Optimizing both ARACNe and VIPER algorithms for large datasets, including sampling strategies and memory optimization.
 
-3. **MLX/GPU Acceleration**: Exploring MLX and GPU acceleration as alternatives to C++ extensions for performance-critical operations.
+3. **MLX/GPU Acceleration**: Exploring MLX and GPU acceleration as alternatives to C++ extensions for performance-critical operations in both ARACNe and VIPER.
 
-4. **Documentation and Examples**: Improving documentation and adding examples with real data.
+4. **Documentation and Examples**: Improving documentation and adding examples with real data, including end-to-end pipeline examples.
+
+5. **Testing**: Implementing comprehensive testing for the full pipeline, including input validation, algorithm validation, and edge case handling.
 
 For a detailed breakdown of the project status and roadmap, see the [Project Status](docs/PySCES_Project_Status.md) document and the [Roadmap](pysces/ROADMAP.md).
 

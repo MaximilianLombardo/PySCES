@@ -30,6 +30,18 @@ The original implementation plan for the PySCES project, including the system ar
 
 Updates to the implementation plan based on progress and new insights. This document provides information about changes to the original plan and adjustments to the project roadmap.
 
+### validation_tests.md
+
+A comprehensive plan for validating the PySCES pipeline, including input data validation, algorithm validation, and edge case handling. This document outlines the tests that should be implemented to ensure the correctness and robustness of the pipeline.
+
+### test_status.md
+
+A document outlining the current status of tests in the PySCES project and the plan for improving test coverage. This document provides information about the current state of unit tests, manual validation, and the plan for implementing comprehensive validation tests.
+
+### implementation_gameplan.md
+
+A detailed implementation plan for the next phase of the PySCES project, focusing on three key areas: input data structure validation, comprehensive pipeline testing, and MLX/GPU acceleration for VIPER. This document outlines the objectives, implementation plans, and expected outcomes for each focus area.
+
 ## Additional Documentation
 
 Additional documentation can be found in the following locations:

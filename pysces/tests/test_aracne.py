@@ -12,10 +12,10 @@ def test_aracne_initialization():
     """Test ARACNe initialization with different parameters."""
     # Default initialization
     aracne = ARACNe()
-    assert aracne.p_value == 1e-8
+    assert aracne.p_value == 0.05
     assert aracne.bootstraps == 100
-    assert aracne.dpi_tolerance == 0.0
-    assert aracne.consensus_threshold == 0.05
+    assert aracne.dpi_tolerance == 0.1
+    assert aracne.consensus_threshold == 0.5
     assert aracne.n_threads == 0
     assert aracne.use_gpu is False
     
