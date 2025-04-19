@@ -80,6 +80,7 @@ setup(
         "scanpy>=1.9",
         "matplotlib>=3.5",
         "seaborn>=0.12",
+        "numba>=0.56",  # For performance optimization
     ],
     extras_require={
         "dev": [

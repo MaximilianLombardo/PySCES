@@ -54,6 +54,10 @@ A detailed account of the debugging process for the pipeline validation issues. 
 
 A summary of the cleanup and organization of the PySCES repository. This document describes the changes made to organize the repository, including archiving outdated scripts, moving test scripts to the appropriate directory, organizing documentation, and updating documentation files.
 
+### performance_optimization.md
+
+A detailed description of the performance optimization work done for the PySCES project, focusing on the ARACNe algorithm implementation. This document covers Numba acceleration, MLX exploration, and benchmarking results.
+
 ### images/
 
 A directory containing images used in the documentation and examples, including:

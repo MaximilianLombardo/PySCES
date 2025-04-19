@@ -77,9 +77,9 @@ We are currently focusing on the following areas:
 
 1. ✅ **Data Validation**: Implemented formal validation of input data structure (checking for raw counts vs. normalized data) and quality control functions.
 
-2. **Performance Optimization**: Optimizing both ARACNe and VIPER algorithms for large datasets, including sampling strategies and memory optimization.
+2. ✅ **Performance Optimization**: Implemented Numba JIT compilation for performance-critical functions in the ARACNe algorithm, providing significant speedup for large datasets.
 
-3. **MLX/GPU Acceleration**: Exploring MLX and GPU acceleration for performance-critical operations in both ARACNe and VIPER.
+3. 🔄 **MLX/GPU Acceleration**: Exploring MLX acceleration for Apple Silicon and GPU acceleration for other platforms. Initial MLX implementation shows promising results for mutual information calculation.
 
 4. **Documentation and Examples**: Improving documentation and adding examples with real data, including end-to-end pipeline examples.
 

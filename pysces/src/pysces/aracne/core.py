@@ -6,12 +6,16 @@ import pandas as pd
 from typing import Dict, List, Tuple, Union, Optional
 import anndata as ad
 import scipy.sparse
-import os
-import importlib.util
 import warnings
 import logging
-import sys
 import traceback
+import time
+
+# Try to import Numba-optimized functions
+try:
+    from .numba_optimized import run_aracne_numba, HAS_NUMBA
+except ImportError:
+    HAS_NUMBA = False
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
@@ -47,7 +51,7 @@ class ARACNe:
 
     def __init__(self, bootstraps=100, p_value=0.05, dpi_tolerance=0.1,
                  consensus_threshold=0.5, chi_square_threshold=7.815,
-                 use_gpu=False, n_threads=0):
+                 use_gpu=False, n_threads=0, use_numba=True):
         """Initialize ARACNe."""
         self.bootstraps = bootstraps
         self.p_value = p_value
@@ -56,10 +60,17 @@ class ARACNe:
         self.chi_square_threshold = chi_square_threshold
         self.use_gpu = use_gpu
         self.n_threads = n_threads
+        self.use_numba = use_numba and HAS_NUMBA
         self._has_cpp_ext = False
 
         logger.debug("Initializing ARACNe with parameters: %s",
                     {k: v for k, v in locals().items() if k != 'self'})
+
+        # Log acceleration status
+        if self.use_numba and HAS_NUMBA:
+            logger.info("Using Numba acceleration for ARACNe")
+        elif self.use_numba and not HAS_NUMBA:
+            logger.warning("Numba requested but not available. Install with: pip install numba")
 
         # Check C++ extension availability
         self._check_cpp_extensions()
@@ -189,9 +200,45 @@ class ARACNe:
             expr_matrix = np.asarray(expr_matrix, dtype=np.float64, order='C')
             tf_indices = np.asarray(tf_indices, dtype=np.int32)
 
-            # Always use Python implementation for reliability and easier debugging
-            logger.debug("Using Python implementation")
-            return self._run_aracne_python(expr_matrix, gene_list, tf_indices)
+            # Check if we should use Numba
+            if self.use_numba and HAS_NUMBA:
+                logger.debug("Using Numba-accelerated implementation")
+                start_time = time.time()
+                consensus_matrix, regulons_dict = run_aracne_numba(
+                    expr_matrix, gene_list, tf_indices,
+                    bootstraps=self.bootstraps,
+                    consensus_threshold=self.consensus_threshold,
+                    dpi_tolerance=self.dpi_tolerance
+                )
+                logger.debug(f"Numba-accelerated ARACNe completed in {time.time() - start_time:.2f} seconds")
+
+                # Create edges list
+                edges = []
+                for tf_name, regulon_data in regulons_dict.items():
+                    for target, strength in regulon_data['targets'].items():
+                        edges.append({
+                            'source': tf_name,
+                            'target': target,
+                            'weight': strength
+                        })
+
+                # Return network
+                return {
+                    'regulons': regulons_dict,
+                    'tf_names': [gene_list[i] for i in tf_indices],
+                    'consensus_matrix': consensus_matrix,
+                    'edges': edges,
+                    'metadata': {
+                        'p_value': self.p_value,
+                        'bootstraps': self.bootstraps,
+                        'dpi_tolerance': self.dpi_tolerance,
+                        'consensus_threshold': self.consensus_threshold
+                    }
+                }
+            else:
+                # Fall back to Python implementation
+                logger.debug("Using Python implementation")
+                return self._run_aracne_python(expr_matrix, gene_list, tf_indices)
 
         except Exception as e:
             logger.error("Error in _run_aracne: %s\n%s",
@@ -265,8 +312,12 @@ class ARACNe:
         This is a fallback for when C++ extensions are not available.
         """
         logger.warning("Using Python implementation of ARACNe.")
-        logger.warning("This is much slower than the C++ implementation.")
-        logger.warning("Consider installing the C++ extensions for better performance.")
+        if not HAS_NUMBA:
+            logger.warning("This is much slower than the Numba-accelerated implementation.")
+            logger.warning("Consider installing Numba for better performance: pip install numba")
+
+        # Record start time for performance measurement
+        start_time = time.time()
 
         # Get dimensions
         n_samples = expr_matrix.shape[0]
@@ -313,6 +364,9 @@ class ARACNe:
 
         # Apply consensus threshold
         consensus_matrix[consensus_matrix < self.consensus_threshold] = 0.0
+
+        # Log performance
+        logger.debug(f"Python implementation of ARACNe completed in {time.time() - start_time:.2f} seconds")
 
         return self._process_results(consensus_matrix, gene_list, tf_indices)
 
