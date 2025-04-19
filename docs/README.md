@@ -42,6 +42,24 @@ A document outlining the current status of tests in the PySCES project and the p
 
 A detailed implementation plan for the next phase of the PySCES project, focusing on three key areas: input data structure validation, comprehensive pipeline testing, and MLX/GPU acceleration for VIPER. This document outlines the objectives, implementation plans, and expected outcomes for each focus area.
 
+### pipeline_validation_fixes.md
+
+A summary of the changes made to fix the pipeline validation issues in the PySCES project. This document describes the issues encountered, the changes made to resolve them, and the results of these changes.
+
+### debugging_pipeline_validation.md
+
+A detailed account of the debugging process for the pipeline validation issues. This document provides context, describes the issues encountered, the attempted solutions, and the final resolution.
+
+### repository_cleanup.md
+
+A summary of the cleanup and organization of the PySCES repository. This document describes the changes made to organize the repository, including archiving outdated scripts, moving test scripts to the appropriate directory, organizing documentation, and updating documentation files.
+
+### images/
+
+A directory containing images used in the documentation and examples, including:
+- **simple_viper_test.png**: Visualization of VIPER test results
+- **viper_anndata_test.png**: Visualization of VIPER results with AnnData
+
 ## Additional Documentation
 
 Additional documentation can be found in the following locations:

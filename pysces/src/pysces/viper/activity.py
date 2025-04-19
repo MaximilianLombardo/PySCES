@@ -35,7 +35,8 @@ def viper(
     signature_method: str = 'rank',
     abs_score: bool = False,
     normalize: bool = True,
-    use_gpu: bool = False
+    use_gpu: bool = False,
+    validate: bool = True
 ) -> pd.DataFrame:
     """
     Run VIPER algorithm to infer protein activity.
@@ -67,6 +68,8 @@ def viper(
         Whether to normalize enrichment scores
     use_gpu : bool, default=False
         Whether to use GPU acceleration with MLX (if available)
+    validate : bool, default=True
+        Whether to validate the input data before running VIPER
 
     Returns
     -------
@@ -82,6 +85,37 @@ def viper(
     >>> regulons = pysces.aracne_to_regulons(network)
     >>> activity = pysces.viper(adata, regulons)
     """
+    # Validate input data if requested
+    if validate:
+        try:
+            from ..utils.validation import validate_anndata_structure, validate_gene_names, validate_cell_names
+
+            # Check AnnData structure
+            is_valid, issues = validate_anndata_structure(adata)
+            if not is_valid:
+                error_msg = "Invalid AnnData structure:\n" + "\n".join([f"- {issue}" for issue in issues])
+                raise ValueError(error_msg)
+
+            # Check gene names
+            is_valid, issues = validate_gene_names(adata)
+            if not is_valid:
+                error_msg = "Invalid gene names:\n" + "\n".join([f"- {issue}" for issue in issues])
+                raise ValueError(error_msg)
+
+            # Check cell names
+            is_valid, issues = validate_cell_names(adata)
+            if not is_valid:
+                error_msg = "Invalid cell names:\n" + "\n".join([f"- {issue}" for issue in issues])
+                raise ValueError(error_msg)
+
+            # Check if layer exists
+            if layer is not None and layer not in adata.layers:
+                raise ValueError(f"Layer '{layer}' not found in AnnData object")
+
+            logger.info("Input data validation successful")
+        except ImportError:
+            logger.warning("Validation module not found. Skipping validation.")
+
     # Check if regulons have targets
     valid_regulons = [r for r in regulons if len(r.targets) > 0]
     if len(valid_regulons) < len(regulons):
@@ -128,7 +162,8 @@ def metaviper(
     normalize: bool = True,
     use_gpu: bool = False,
     weights: Optional[Dict[str, float]] = None,
-    weight_method: str = 'equal'
+    weight_method: str = 'equal',
+    validate: bool = True
 ) -> pd.DataFrame:
     """
     Run metaVIPER with multiple regulon sets.
@@ -158,6 +193,8 @@ def metaviper(
         - 'equal': Equal weights for all regulon sets
         - 'size': Weight by number of regulons in each set
         - 'adaptive': Adaptive weights based on enrichment strength
+    validate : bool, default=True
+        Whether to validate the input data before running VIPER
 
     Returns
     -------
@@ -173,6 +210,37 @@ def metaviper(
     >>> # Run with custom weights
     >>> activity = pysces.metaviper(adata, {'set1': regulons1, 'set2': regulons2}, weights={'set1': 0.7, 'set2': 0.3})
     """
+    # Validate input data if requested
+    if validate:
+        try:
+            from ..utils.validation import validate_anndata_structure, validate_gene_names, validate_cell_names
+
+            # Check AnnData structure
+            is_valid, issues = validate_anndata_structure(adata)
+            if not is_valid:
+                error_msg = "Invalid AnnData structure:\n" + "\n".join([f"- {issue}" for issue in issues])
+                raise ValueError(error_msg)
+
+            # Check gene names
+            is_valid, issues = validate_gene_names(adata)
+            if not is_valid:
+                error_msg = "Invalid gene names:\n" + "\n".join([f"- {issue}" for issue in issues])
+                raise ValueError(error_msg)
+
+            # Check cell names
+            is_valid, issues = validate_cell_names(adata)
+            if not is_valid:
+                error_msg = "Invalid cell names:\n" + "\n".join([f"- {issue}" for issue in issues])
+                raise ValueError(error_msg)
+
+            # Check if layer exists
+            if layer is not None and layer not in adata.layers:
+                raise ValueError(f"Layer '{layer}' not found in AnnData object")
+
+            logger.info("Input data validation successful")
+        except ImportError:
+            logger.warning("Validation module not found. Skipping validation.")
+
     # Run VIPER for each regulon set
     viper_results = {}
     for name, regulons in regulon_sets.items():
@@ -184,7 +252,8 @@ def metaviper(
             signature_method=signature_method,
             abs_score=abs_score,
             normalize=normalize,
-            use_gpu=use_gpu
+            use_gpu=use_gpu,
+            validate=False  # Skip validation for individual VIPER calls since we already validated
         )
 
     # Determine weights
@@ -256,7 +325,8 @@ def viper_bootstrap_wrapper(
     signature_method: str = 'rank',
     abs_score: bool = False,
     normalize: bool = True,
-    seed: Optional[int] = None
+    seed: Optional[int] = None,
+    validate: bool = True
 ) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """
     Calculate VIPER scores with bootstrapping.
@@ -283,6 +353,8 @@ def viper_bootstrap_wrapper(
         Whether to normalize enrichment scores
     seed : int, optional
         Random seed for reproducibility
+    validate : bool, default=True
+        Whether to validate the input data before running VIPER
 
     Returns
     -------
@@ -299,6 +371,37 @@ def viper_bootstrap_wrapper(
     >>> regulons = pysces.aracne_to_regulons(network)
     >>> mean_activity, std_activity = pysces.viper_bootstrap_wrapper(adata, regulons, n_bootstraps=50)
     """
+    # Validate input data if requested
+    if validate:
+        try:
+            from ..utils.validation import validate_anndata_structure, validate_gene_names, validate_cell_names
+
+            # Check AnnData structure
+            is_valid, issues = validate_anndata_structure(adata)
+            if not is_valid:
+                error_msg = "Invalid AnnData structure:\n" + "\n".join([f"- {issue}" for issue in issues])
+                raise ValueError(error_msg)
+
+            # Check gene names
+            is_valid, issues = validate_gene_names(adata)
+            if not is_valid:
+                error_msg = "Invalid gene names:\n" + "\n".join([f"- {issue}" for issue in issues])
+                raise ValueError(error_msg)
+
+            # Check cell names
+            is_valid, issues = validate_cell_names(adata)
+            if not is_valid:
+                error_msg = "Invalid cell names:\n" + "\n".join([f"- {issue}" for issue in issues])
+                raise ValueError(error_msg)
+
+            # Check if layer exists
+            if layer is not None and layer not in adata.layers:
+                raise ValueError(f"Layer '{layer}' not found in AnnData object")
+
+            logger.info("Input data validation successful")
+        except ImportError:
+            logger.warning("Validation module not found. Skipping validation.")
+
     return _viper_bootstrap(
         adata,
         regulons,
@@ -322,7 +425,8 @@ def viper_null_model_wrapper(
     signature_method: str = 'rank',
     abs_score: bool = False,
     normalize: bool = True,
-    seed: Optional[int] = None
+    seed: Optional[int] = None,
+    validate: bool = True
 ) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """
     Calculate VIPER scores with a null model for statistical significance.
@@ -347,6 +451,8 @@ def viper_null_model_wrapper(
         Whether to normalize enrichment scores
     seed : int, optional
         Random seed for reproducibility
+    validate : bool, default=True
+        Whether to validate the input data before running VIPER
 
     Returns
     -------
@@ -363,6 +469,37 @@ def viper_null_model_wrapper(
     >>> regulons = pysces.aracne_to_regulons(network)
     >>> activity, p_values = pysces.viper_null_model_wrapper(adata, regulons, n_permutations=100)
     """
+    # Validate input data if requested
+    if validate:
+        try:
+            from ..utils.validation import validate_anndata_structure, validate_gene_names, validate_cell_names
+
+            # Check AnnData structure
+            is_valid, issues = validate_anndata_structure(adata)
+            if not is_valid:
+                error_msg = "Invalid AnnData structure:\n" + "\n".join([f"- {issue}" for issue in issues])
+                raise ValueError(error_msg)
+
+            # Check gene names
+            is_valid, issues = validate_gene_names(adata)
+            if not is_valid:
+                error_msg = "Invalid gene names:\n" + "\n".join([f"- {issue}" for issue in issues])
+                raise ValueError(error_msg)
+
+            # Check cell names
+            is_valid, issues = validate_cell_names(adata)
+            if not is_valid:
+                error_msg = "Invalid cell names:\n" + "\n".join([f"- {issue}" for issue in issues])
+                raise ValueError(error_msg)
+
+            # Check if layer exists
+            if layer is not None and layer not in adata.layers:
+                raise ValueError(f"Layer '{layer}' not found in AnnData object")
+
+            logger.info("Input data validation successful")
+        except ImportError:
+            logger.warning("Validation module not found. Skipping validation.")
+
     return _viper_null_model(
         adata,
         regulons,

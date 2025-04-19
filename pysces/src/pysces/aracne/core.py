@@ -17,17 +17,10 @@ import traceback
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
-# Try to import C++ extensions
-try:
-    from ._cpp import aracne_ext
-    _has_cpp_ext = True
-    print(f"Using C++ extensions for ARACNe (version: {getattr(aracne_ext, '__version__', 'unknown')})")
-except ImportError:
-    _has_cpp_ext = False
-    warnings.warn(
-        "Could not import ARACNe C++ extensions. Using slower Python implementation. "
-        "To use the faster C++ implementation, rebuild the package with C++ support enabled."
-    )
+# Disable C++ extensions as they're causing issues
+# The Python implementation is more reliable and easier to debug
+_has_cpp_ext = False
+print("Using Python implementation of ARACNe (C++ extensions disabled)")
 
 class ARACNe:
     """
@@ -72,42 +65,21 @@ class ARACNe:
         self._check_cpp_extensions()
 
     def _check_cpp_extensions(self):
-        """Check if C++ extensions are properly loaded."""
-        try:
-            logger.debug("Attempting to import C++ extensions")
-            from ._cpp import aracne_ext
+        """Check if C++ extensions are properly loaded.
 
-            # Test with small arrays
-            x = np.array([1.0, 2.0], dtype=np.float64)
-            y = np.array([2.0, 4.0], dtype=np.float64)
-
-            logger.debug("Testing C++ extension with arrays: x=%s, y=%s", x, y)
-            test_mi = aracne_ext.calculate_mi_ap(x, y)
-
-            logger.debug("C++ extension test successful. MI=%f", test_mi)
-            self._has_cpp_ext = True
-
-        except ImportError as e:
-            logger.error("Failed to import C++ extensions: %s", str(e))
-            self._has_cpp_ext = False
-            warnings.warn(
-                f"Could not import ARACNe C++ extensions: {str(e)}. "
-                "Using slower Python implementation."
-            )
-        except Exception as e:
-            logger.error("Error testing C++ extensions: %s\n%s",
-                        str(e), traceback.format_exc())
-            self._has_cpp_ext = False
-            warnings.warn(
-                f"Error testing ARACNe C++ extensions: {str(e)}. "
-                "Using slower Python implementation."
-            )
+        Note: Currently configured to always use the Python implementation
+        as it's more reliable and easier to debug than the C++ implementation.
+        """
+        # Always use Python implementation
+        self._has_cpp_ext = False
+        logger.debug("Using Python implementation of ARACNe")
 
     def run(
         self,
         adata: ad.AnnData,
         tf_list: Optional[List[str]] = None,
-        layer: Optional[str] = None
+        layer: Optional[str] = None,
+        validate: bool = True
     ) -> Dict:
         """
         Run ARACNe network inference on expression data.
@@ -120,6 +92,8 @@ class ARACNe:
             List of transcription factor names. If None, all genes are considered TFs.
         layer : str, optional
             Which layer of the AnnData to use. If None, uses .X
+        validate : bool, default=True
+            Whether to validate the input data before running ARACNe
 
         Returns
         -------
@@ -133,6 +107,37 @@ class ARACNe:
         >>> aracne = pysces.ARACNe()
         >>> network = aracne.run(adata)
         """
+        # Validate input data if requested
+        if validate:
+            try:
+                from ..utils.validation import validate_anndata_structure, validate_gene_names, validate_cell_names
+
+                # Check AnnData structure
+                is_valid, issues = validate_anndata_structure(adata)
+                if not is_valid:
+                    error_msg = "Invalid AnnData structure:\n" + "\n".join([f"- {issue}" for issue in issues])
+                    raise ValueError(error_msg)
+
+                # Check gene names
+                is_valid, issues = validate_gene_names(adata)
+                if not is_valid:
+                    error_msg = "Invalid gene names:\n" + "\n".join([f"- {issue}" for issue in issues])
+                    raise ValueError(error_msg)
+
+                # Check cell names
+                is_valid, issues = validate_cell_names(adata)
+                if not is_valid:
+                    error_msg = "Invalid cell names:\n" + "\n".join([f"- {issue}" for issue in issues])
+                    raise ValueError(error_msg)
+
+                # Check if layer exists
+                if layer is not None and layer not in adata.layers:
+                    raise ValueError(f"Layer '{layer}' not found in AnnData object")
+
+                logger.info("Input data validation successful")
+            except ImportError:
+                logger.warning("Validation module not found. Skipping validation.")
+
         # Extract expression matrix
         if layer is None:
             expr_matrix = adata.X
@@ -155,7 +160,15 @@ class ARACNe:
             tf_list = gene_list
         else:
             # Ensure all TFs are in the gene list
+            original_tf_count = len(tf_list)
             tf_list = [tf for tf in tf_list if tf in gene_list]
+            filtered_tf_count = len(tf_list)
+
+            if filtered_tf_count < original_tf_count:
+                logger.warning(f"Filtered out {original_tf_count - filtered_tf_count} TFs that were not found in the dataset")
+
+            if filtered_tf_count == 0:
+                raise ValueError("No valid TFs found in the dataset")
 
         # Get TF indices
         tf_indices = [gene_list.index(tf) for tf in tf_list]
@@ -176,67 +189,9 @@ class ARACNe:
             expr_matrix = np.asarray(expr_matrix, dtype=np.float64, order='C')
             tf_indices = np.asarray(tf_indices, dtype=np.int32)
 
-            if not self._has_cpp_ext or self.use_gpu:
-                logger.debug("Using Python implementation")
-                return self._run_aracne_python(expr_matrix, gene_list, tf_indices)
-
-            logger.debug("Using C++ implementation")
-            from ._cpp import aracne_ext
-
-            # Test single MI calculation first
-            logger.debug("Testing single MI calculation")
-            test_genes = expr_matrix[:, :2]  # Take first two genes
-            test_mi = aracne_ext.calculate_mi_ap(
-                test_genes[:, 0],
-                test_genes[:, 1],
-                self.chi_square_threshold
-            )
-            logger.debug("Single MI calculation successful: %f", test_mi)
-
-            # Run full analysis with bootstrapping
-            logger.debug(f"Starting full ARACNe analysis with {self.bootstraps} bootstraps")
-
-            # Initialize consensus matrix
-            n_tfs = len(tf_indices)
-            n_genes = expr_matrix.shape[1]
-            consensus_matrix = np.zeros((n_tfs, n_genes), dtype=np.float64)
-
-            # Run bootstrap iterations
-            for b in range(self.bootstraps):
-                logger.debug(f"Bootstrap iteration {b+1}/{self.bootstraps}")
-
-                # Create bootstrap sample
-                if hasattr(aracne_ext, 'bootstrap_matrix'):
-                    # Use C++ implementation if available
-                    bootstrap_data = aracne_ext.bootstrap_matrix(expr_matrix)
-                else:
-                    # Otherwise use numpy
-                    bootstrap_indices = np.random.choice(expr_matrix.shape[0], expr_matrix.shape[0], replace=True)
-                    bootstrap_data = expr_matrix[bootstrap_indices]
-
-                # Calculate MI matrix
-                mi_matrix = aracne_ext.calculate_mi_matrix(
-                    bootstrap_data,
-                    tf_indices,
-                    self.chi_square_threshold,
-                    self.n_threads
-                )
-
-                # Apply DPI
-                pruned_matrix = aracne_ext.apply_dpi(
-                    mi_matrix,
-                    self.dpi_tolerance,
-                    self.n_threads
-                )
-
-                # Add to consensus matrix
-                consensus_matrix += (pruned_matrix > 0).astype(np.float64) / self.bootstraps
-
-            # Apply consensus threshold
-            consensus_matrix[consensus_matrix < self.consensus_threshold] = 0.0
-
-            logger.debug("ARACNe analysis complete")
-            return self._process_results(consensus_matrix, gene_list, tf_indices)
+            # Always use Python implementation for reliability and easier debugging
+            logger.debug("Using Python implementation")
+            return self._run_aracne_python(expr_matrix, gene_list, tf_indices)
 
         except Exception as e:
             logger.error("Error in _run_aracne: %s\n%s",
@@ -258,7 +213,12 @@ class ARACNe:
                         continue
 
                     # Get interaction strength
-                    strength = consensus_matrix[i, j]
+                    # Make sure j is within bounds of the consensus matrix
+                    if j < consensus_matrix.shape[1]:
+                        strength = consensus_matrix[i, j]
+                    else:
+                        # Skip genes that are out of bounds
+                        continue
 
                     # Add to targets if non-zero
                     if strength > 0:
@@ -270,11 +230,23 @@ class ARACNe:
                     'targets': targets
                 }
 
+            # Create edges list for compatibility with downstream functions
+            # Each edge is a dictionary with source (TF), target (gene), and weight (interaction strength)
+            edges = []
+            for tf_name, regulon_data in regulons.items():
+                for target, strength in regulon_data['targets'].items():
+                    edges.append({
+                        'source': tf_name,
+                        'target': target,
+                        'weight': strength
+                    })
+
             # Return network
             return {
                 'regulons': regulons,
                 'tf_names': [gene_list[i] for i in tf_indices],
                 'consensus_matrix': consensus_matrix,
+                'edges': edges,  # Add edges to the network
                 'metadata': {
                     'p_value': self.p_value,
                     'bootstraps': self.bootstraps,

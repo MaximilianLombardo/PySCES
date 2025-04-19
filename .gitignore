@@ -117,6 +117,7 @@ references/**/*.tsv
 references/**/*.gmt
 references/**/*.gz
 references/**/*.ipynb
+references/pyviper/
 
 # Temporary files
 tmp/

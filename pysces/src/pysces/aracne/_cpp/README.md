@@ -1,6 +1,8 @@
-# ARACNe C++ Extensions
+# ARACNe C++ Extensions (ARCHIVED)
 
-This directory contains C++ extensions for the ARACNe algorithm, which provide significant performance improvements over the Python implementation.
+**NOTE: These C++ extensions are currently disabled in favor of the Python implementation, which is more reliable and easier to debug. This directory is kept for reference purposes only.**
+
+This directory contains C++ extensions for the ARACNe algorithm, which were intended to provide performance improvements over the Python implementation.
 
 ## Overview
 
@@ -76,18 +78,20 @@ The C++ extensions provide significant performance improvements over the Python 
 
 ## Known Issues
 
-The original implementation had several issues that have been fixed in the current version:
+The C++ implementation had several issues that led to its disablement:
 
 - Handling of perfect correlation/anti-correlation
 - Handling of constant arrays
 - MI matrix shape issues
 - Segmentation faults in matrix operations
+- Index out of bounds errors
+- Inconsistent results compared to the Python implementation
 
-## Future Improvements
+## Future Alternatives
 
-Planned improvements include:
+Instead of fixing the C++ implementation, we are exploring:
 
-- GPU acceleration for large datasets
-- Further optimization of memory usage
-- Support for sparse matrices
-- Additional parallelization strategies
+- MLX acceleration for large datasets
+- GPU acceleration using frameworks like CUDA or OpenCL
+- Optimized Python implementation with Numba
+- JAX-based implementation for automatic differentiation and GPU support

@@ -31,17 +31,18 @@ The repository is organized as follows:
 ### Archive
 
 - **[archive/](archive/)**: Archived files and documents that are no longer actively used but are kept for reference.
+  - [debug_scripts/](archive/debug_scripts/): Archived debug and test scripts related to the C++ extensions.
 
 ## Current Status
 
 PySCES is currently in active development. The following components are implemented and functional:
 
 - ✅ **ARACNe Algorithm**: Core algorithm for inferring gene regulatory networks
-  - Mutual information calculation with C++ extensions
+  - Mutual information calculation using Python implementation
   - Data processing inequality (DPI) algorithm
   - Bootstrapping for network robustness
   - Consensus network generation
-  - Python fallback implementation
+  - Network to regulons conversion
   - Verified with real biological data from CELLxGENE
 
 - ✅ **VIPER Algorithm**: Core algorithm for inferring protein activity
@@ -74,15 +75,15 @@ PySCES is currently in active development. The following components are implemen
 
 We are currently focusing on the following areas:
 
-1. **Data Validation**: Implementing formal validation of input data structure (checking for raw counts vs. normalized data) and quality control functions.
+1. ✅ **Data Validation**: Implemented formal validation of input data structure (checking for raw counts vs. normalized data) and quality control functions.
 
 2. **Performance Optimization**: Optimizing both ARACNe and VIPER algorithms for large datasets, including sampling strategies and memory optimization.
 
-3. **MLX/GPU Acceleration**: Exploring MLX and GPU acceleration as alternatives to C++ extensions for performance-critical operations in both ARACNe and VIPER.
+3. **MLX/GPU Acceleration**: Exploring MLX and GPU acceleration for performance-critical operations in both ARACNe and VIPER.
 
 4. **Documentation and Examples**: Improving documentation and adding examples with real data, including end-to-end pipeline examples.
 
-5. **Testing**: Implementing comprehensive testing for the full pipeline, including input validation, algorithm validation, and edge case handling.
+5. ✅ **Pipeline Validation**: Implemented comprehensive testing for the full pipeline, including input validation, algorithm validation, and edge case handling.
 
 For a detailed breakdown of the project status and roadmap, see the [Project Status](docs/PySCES_Project_Status.md) document and the [Roadmap](pysces/ROADMAP.md).
 
@@ -107,6 +108,7 @@ To get started with the PySCES project, follow these steps:
 3. **Run the example scripts**:
    ```bash
    python examples/test_installation.py
+   python examples/pipeline_validation_test_direct.py
    python examples/aracne_census_example.py
    ```
 
