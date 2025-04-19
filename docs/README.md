@@ -54,15 +54,20 @@ A detailed account of the debugging process for the pipeline validation issues. 
 
 A summary of the cleanup and organization of the PySCES repository. This document describes the changes made to organize the repository, including archiving outdated scripts, moving test scripts to the appropriate directory, organizing documentation, and updating documentation files.
 
-### performance_optimization.md
+### performance_optimizations.md
 
-A detailed description of the performance optimization work done for the PySCES project, focusing on the ARACNe algorithm implementation. This document covers Numba acceleration, MLX exploration, and benchmarking results.
+A comprehensive documentation of the performance optimizations implemented in PySCES, including Numba acceleration for both ARACNe and VIPER algorithms, MLX integration for Apple Silicon, and detailed benchmarking results. This document explains how the optimizations work, why speedup increases with dataset size, and the practical impact for scientists analyzing large-scale single-cell datasets.
 
 ### images/
 
 A directory containing images used in the documentation and examples, including:
 - **simple_viper_test.png**: Visualization of VIPER test results
 - **viper_anndata_test.png**: Visualization of VIPER results with AnnData
+- **aracne_benchmark.png**: Benchmark comparison of Python vs. Numba implementations for ARACNe
+- **aracne_speedup.png**: Speedup factors for ARACNe across different dataset sizes
+- **viper_benchmark.png**: Benchmark comparison of Python vs. Numba implementations for VIPER
+- **viper_speedup.png**: Speedup factors for VIPER across different dataset sizes
+- **speedup_comparison.png**: Comparison of speedup factors between ARACNe and VIPER
 
 ## Additional Documentation
 
