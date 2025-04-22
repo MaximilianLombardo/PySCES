@@ -14,7 +14,8 @@ The repository is organized as follows:
 ### Documentation
 
 - **[docs/](docs/)**: Comprehensive documentation for the PySCES project.
-  - [Project Status](docs/PySCES_Project_Status.md): Current status, implementation details, and future plans.
+  - [Current Status and Next Steps](docs/Current_Status_and_Next_Steps.md): Latest status and detailed next steps.
+  - [Project Status](docs/PySCES_Project_Status.md): Comprehensive project status and implementation details.
   - [Implementation Plan](docs/pysces_implementation_plan.md): Original implementation plan and system architecture.
   - See the [Documentation README](docs/README.md) for a complete list of available documentation.
 
@@ -75,17 +76,17 @@ PySCES is currently in active development. The following components are implemen
 
 We are currently focusing on the following areas:
 
-1. ✅ **Data Validation**: Implemented formal validation of input data structure (checking for raw counts vs. normalized data) and quality control functions.
+1. **Testing on Real Datasets**: Running the complete Numba-optimized pipeline on real datasets of varying sizes to measure performance and validate results.
 
-2. ✅ **Performance Optimization**: Implemented Numba JIT compilation for performance-critical functions in the ARACNe algorithm, providing significant speedup for large datasets.
+2. **Pre-processing Implementation**: Modifying the pipeline to include appropriate pre-processing steps for data validation, quality control, normalization, and feature selection.
 
-3. 🔄 **MLX/GPU Acceleration**: Exploring MLX acceleration for Apple Silicon and GPU acceleration for other platforms. Initial MLX implementation shows promising results for mutual information calculation.
+3. **Manual Stratification Strategy**: Refining our approach to manually stratify data by cell type, which has proven to be the most effective approach for large datasets.
 
-4. **Documentation and Examples**: Improving documentation and adding examples with real data, including end-to-end pipeline examples.
+4. **Documentation and Code Cleanup**: Updating documentation to reflect the current status and plan, and cleaning up code to improve maintainability and performance.
 
-5. ✅ **Pipeline Validation**: Implemented comprehensive testing for the full pipeline, including input validation, algorithm validation, and edge case handling.
+5. **NumPy 2.0 Compatibility**: Replacing temporary monkey patches with proper type handling throughout the codebase.
 
-For a detailed breakdown of the project status and roadmap, see the [Project Status](docs/PySCES_Project_Status.md) document and the [Roadmap](pysces/ROADMAP.md).
+For a detailed breakdown of the project status and next steps, see the [Current Status and Next Steps](docs/Current_Status_and_Next_Steps.md) document.
 
 ## Getting Started
 
