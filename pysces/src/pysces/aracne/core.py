@@ -10,12 +10,17 @@ import warnings
 import logging
 import traceback
 import time
+import platform
 
-# Try to import Numba-optimized functions
+# Import Numba-optimized functions
 try:
     from .numba_optimized import run_aracne_numba, HAS_NUMBA
 except ImportError:
     HAS_NUMBA = False
+    warnings.warn(
+        "Numba is not installed. Using slower Python implementation. "
+        "To use the faster Numba implementation, install Numba with: pip install numba"
+    )
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
@@ -30,8 +35,7 @@ class ARACNe:
     """
     ARACNe (Algorithm for the Reconstruction of Accurate Cellular Networks) implementation.
 
-    This class provides methods for inferring gene regulatory networks from expression data
-    using the ARACNe algorithm, which is based on mutual information and data processing inequality.
+    This implementation uses Numba for acceleration by default, with a fallback to pure Python.
 
     Parameters
     ----------
@@ -45,35 +49,78 @@ class ARACNe:
         Threshold for consensus network (fraction of bootstrap networks)
     n_threads : int, default=0
         Number of threads to use (0 = auto)
-    use_gpu : bool, default=False
-        Whether to use GPU acceleration (if available)
+    backend : str, default='auto'
+        Computation backend to use. Options: 'auto', 'numba', 'python'
+    stratify_by_tissue : bool, default=False
+        Whether to stratify analysis by tissue
+    stratify_by_cell_type : bool, default=False
+        Whether to stratify analysis by cell type
+    tissue_col : str, default='tissue'
+        Column name in AnnData.obs containing tissue information
+    cell_type_col : str, default='cell_type'
+        Column name in AnnData.obs containing cell type information
     """
 
     def __init__(self, bootstraps=100, p_value=0.05, dpi_tolerance=0.1,
                  consensus_threshold=0.5, chi_square_threshold=7.815,
-                 use_gpu=False, n_threads=0, use_numba=True):
+                 backend='auto', n_threads=0,
+                 stratify_by_tissue=False, stratify_by_cell_type=False,
+                 tissue_col='tissue', cell_type_col='cell_type'):
         """Initialize ARACNe."""
         self.bootstraps = bootstraps
         self.p_value = p_value
         self.dpi_tolerance = dpi_tolerance
         self.consensus_threshold = consensus_threshold
         self.chi_square_threshold = chi_square_threshold
-        self.use_gpu = use_gpu
+        self.backend = backend
         self.n_threads = n_threads
-        self.use_numba = use_numba and HAS_NUMBA
+        self.stratify_by_tissue = stratify_by_tissue
+        self.stratify_by_cell_type = stratify_by_cell_type
+        self.tissue_col = tissue_col
+        self.cell_type_col = cell_type_col
         self._has_cpp_ext = False
+
+        # Determine which backend to use
+        self._determine_backend()
 
         logger.debug("Initializing ARACNe with parameters: %s",
                     {k: v for k, v in locals().items() if k != 'self'})
 
-        # Log acceleration status
-        if self.use_numba and HAS_NUMBA:
-            logger.info("Using Numba acceleration for ARACNe")
-        elif self.use_numba and not HAS_NUMBA:
-            logger.warning("Numba requested but not available. Install with: pip install numba")
+        # Log stratification status
+        if self.stratify_by_tissue:
+            logger.info(f"Using tissue stratification (column: {self.tissue_col})")
+        if self.stratify_by_cell_type:
+            logger.info(f"Using cell type stratification (column: {self.cell_type_col})")
 
-        # Check C++ extension availability
-        self._check_cpp_extensions()
+    def _determine_backend(self):
+        """Determine which backend to use based on availability and user preference."""
+        # Initialize backend flags
+        self.use_numba = False
+
+        # Auto-detect the best available backend
+        if self.backend == 'auto':
+            # Check for Numba
+            if HAS_NUMBA:
+                self.use_numba = True
+                logger.info("Auto-selected Numba backend")
+            else:
+                logger.warning("No acceleration available. Using Python implementation.")
+        # Use specific backend requested by user
+        else:
+            if self.backend == 'numba':
+                if HAS_NUMBA:
+                    self.use_numba = True
+                    logger.info("Using Numba backend")
+                else:
+                    logger.warning("Numba requested but not available. Install with: pip install numba")
+                    logger.warning("Falling back to Python implementation")
+            elif self.backend == 'python':
+                logger.info("Using Python implementation (no acceleration)")
+            else:
+                logger.warning(f"Unknown backend '{self.backend}'. Using auto-detection.")
+                # Recursively call with auto
+                self.backend = 'auto'
+                self._determine_backend()
 
     def _check_cpp_extensions(self):
         """Check if C++ extensions are properly loaded.
@@ -204,12 +251,14 @@ class ARACNe:
             if self.use_numba and HAS_NUMBA:
                 logger.debug("Using Numba-accelerated implementation")
                 start_time = time.time()
+
                 consensus_matrix, regulons_dict = run_aracne_numba(
                     expr_matrix, gene_list, tf_indices,
                     bootstraps=self.bootstraps,
                     consensus_threshold=self.consensus_threshold,
                     dpi_tolerance=self.dpi_tolerance
                 )
+
                 logger.debug(f"Numba-accelerated ARACNe completed in {time.time() - start_time:.2f} seconds")
 
                 # Create edges list

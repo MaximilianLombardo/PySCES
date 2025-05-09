@@ -6,11 +6,12 @@ This document outlines the performance optimizations implemented in PySCES to ac
 
 PySCES has been optimized to handle large-scale single-cell datasets efficiently. The key optimizations include:
 
-1. **Numba Acceleration**: Just-in-time compilation of performance-critical functions
-2. **MLX Integration**: Experimental support for Apple Silicon GPU acceleration
-3. **Algorithmic Improvements**: Enhanced implementations of core algorithms
+1. **Numba Acceleration**: Just-in-time compilation of performance-critical functions for all platforms
+2. **MLX Integration**: Comprehensive support for Apple Silicon GPU acceleration leveraging unified memory
+3. **Algorithmic Improvements**: Enhanced implementations of core algorithms with vectorization and parallelization
+4. **Automatic Acceleration Selection**: Intelligent selection of the best available acceleration method
 
-These optimizations significantly reduce computation time, especially for large datasets, making it practical to analyze datasets with thousands of cells and genes.
+These optimizations significantly reduce computation time, especially for large datasets, making it practical to analyze datasets with thousands of cells and genes. The implementation is designed to provide the best performance across different hardware platforms, with special optimizations for Apple Silicon devices.
 
 ## Benchmark Results
 
@@ -116,11 +117,125 @@ An interesting observation from our benchmarks is that the speedup often increas
 
 This makes our optimized implementation particularly valuable for large-scale single-cell analyses, where the datasets can contain thousands of cells and genes.
 
-## MLX Integration for Apple Silicon
+## MLX Acceleration Strategy for Apple Silicon
 
-For users with Apple Silicon hardware (M1/M2/M3 chips), we've added experimental support for MLX, Apple's machine learning framework that leverages the GPU for acceleration.
+For users with Apple Silicon hardware (M1/M2/M3 chips), we've implemented support for MLX, Apple's machine learning framework that leverages the unified memory architecture and GPU acceleration capabilities of Apple Silicon.
 
-The MLX implementation is still experimental but shows promising results for certain operations, particularly matrix operations that can be efficiently parallelized on the GPU.
+### Key MLX Features Leveraged
+
+#### 1. Lazy Evaluation
+
+MLX uses a lazy computation model where operations are recorded in a compute graph but not executed until explicitly evaluated. This allows for:
+
+- **Operation Batching**: Multiple operations can be batched together before evaluation
+- **Graph Optimization**: The computation graph can be optimized before execution
+- **Reduced Overhead**: Minimizing the number of evaluations reduces overhead
+
+#### 2. Unified Memory Architecture
+
+Apple Silicon has a unified memory architecture where the CPU and GPU share the same memory pool:
+
+- **Zero-Copy Operations**: No need to transfer data between CPU and GPU memory
+- **Device Flexibility**: Operations can run on either CPU or GPU without data movement
+- **Parallel Execution**: CPU and GPU can work simultaneously on different parts of the computation
+
+### Implementation Strategy
+
+#### Platform Detection and Initialization
+
+The MLX implementation automatically detects Apple Silicon hardware and the availability of MLX:
+
+```python
+def is_apple_silicon():
+    """Check if running on Apple Silicon."""
+    import platform
+    return platform.processor() == 'arm'
+
+def initialize_mlx():
+    """Initialize MLX if available."""
+    if is_apple_silicon():
+        try:
+            import mlx.core as mx
+            return True, mx
+        except ImportError:
+            return False, None
+    return False, None
+```
+
+#### Optimized Core Functions
+
+We've implemented MLX-optimized versions of the core computational functions:
+
+1. **For ARACNe**:
+   - Mutual Information calculation using MLX's vectorized operations
+   - Data Processing Inequality (DPI) algorithm using MLX's array operations
+   - Bootstrap sampling and consensus network construction
+
+2. **For VIPER**:
+   - Signature calculation using MLX's statistical functions
+   - Enrichment score calculation using MLX's sorting and cumulative operations
+   - NES matrix calculation with efficient broadcasting
+
+#### Vectorization and Batch Processing
+
+The MLX implementation emphasizes:
+
+- **Vectorized Operations**: Replacing loops with MLX's array operations
+- **Batch Processing**: Processing data in batches to reduce overhead
+- **Strategic Evaluation**: Evaluating the compute graph at optimal points
+
+#### Memory Efficiency
+
+To maximize performance, we:
+
+- **Minimize Conversions**: Keep data in MLX format throughout the computation
+- **Reuse Arrays**: Avoid creating unnecessary temporary arrays
+- **Leverage Unified Memory**: Let operations run on the most appropriate device
+
+### Automatic Fallback Mechanism
+
+The implementation includes a robust fallback mechanism:
+
+```python
+def run_algorithm(adata, **kwargs):
+    """Run algorithm with automatic acceleration selection."""
+    has_mlx, mx = initialize_mlx()
+
+    if has_mlx and is_apple_silicon():
+        # Use MLX implementation
+        return run_algorithm_mlx(adata, **kwargs)
+    elif HAS_NUMBA:
+        # Fall back to Numba implementation
+        return run_algorithm_numba(adata, **kwargs)
+    else:
+        # Fall back to Python implementation
+        return run_algorithm_python(adata, **kwargs)
+```
+
+### Usage
+
+The MLX acceleration can be enabled explicitly:
+
+```python
+# ARACNe with MLX acceleration on Apple Silicon
+aracne = ARACNe(use_mlx=True)
+network = aracne.run(adata, tf_list=tf_names)
+
+# VIPER with MLX acceleration on Apple Silicon
+activity = viper_scores(adata, regulons, use_mlx=True)
+```
+
+By default, the implementation will automatically use MLX if running on Apple Silicon and MLX is available.
+
+### Performance Expectations
+
+The MLX implementation is expected to provide significant speedups for:
+
+- **Large Matrices**: Operations on large matrices benefit most from GPU acceleration
+- **Complex Mathematical Operations**: Functions with high arithmetic intensity
+- **Batch Processing**: Processing multiple samples or bootstraps in parallel
+
+The actual speedup will vary depending on the specific hardware, dataset size, and operation type.
 
 ## Practical Impact for Scientists
 
@@ -138,6 +253,8 @@ These optimizations enable scientists to:
 
 The optimized implementations are used by default, but can be explicitly controlled:
 
+### Numba Acceleration (All Platforms)
+
 ```python
 # ARACNe with Numba acceleration (default)
 aracne = ARACNe(use_numba=True)
@@ -147,28 +264,62 @@ network = aracne.run(adata, tf_list=tf_names)
 activity = viper_scores(adata, regulons, use_numba=True)
 ```
 
+### MLX Acceleration (Apple Silicon Only)
+
+```python
+# ARACNe with MLX acceleration on Apple Silicon
+aracne = ARACNe(use_mlx=True)
+network = aracne.run(adata, tf_list=tf_names)
+
+# VIPER with MLX acceleration on Apple Silicon
+activity = viper_scores(adata, regulons, use_mlx=True)
+```
+
+### Combined Acceleration Options
+
+```python
+# Try MLX first, fall back to Numba if MLX is not available
+aracne = ARACNe(use_mlx=True, use_numba=True)
+network = aracne.run(adata, tf_list=tf_names)
+
+# Same for VIPER
+activity = viper_scores(adata, regulons, use_mlx=True, use_numba=True)
+```
+
+### Python Implementation (for Debugging)
+
 To use the Python implementation (e.g., for debugging or comparison):
 
 ```python
-# ARACNe without Numba acceleration
-aracne = ARACNe(use_numba=False)
+# ARACNe without any acceleration
+aracne = ARACNe(use_numba=False, use_mlx=False)
 network = aracne.run(adata, tf_list=tf_names)
 
-# VIPER without Numba acceleration
-activity = viper_scores(adata, regulons, use_numba=False)
+# VIPER without any acceleration
+activity = viper_scores(adata, regulons, use_numba=False, use_mlx=False)
 ```
 
 ## Future Optimization Directions
 
 We're continuing to explore additional optimization strategies:
 
-1. **Full MLX Implementation**: Complete the MLX implementation for all algorithms
+1. **Unified Acceleration Interface**: Create a common interface for all acceleration backends (Numba, MLX, CUDA)
 
-2. **Hybrid CPU/GPU Approach**: Use the best of both worlds by combining Numba and MLX
+2. **NVIDIA GPU Support**: Extend the acceleration framework to support NVIDIA GPUs via CUDA
 
-3. **Memory Optimization**: Reduce memory usage for very large datasets
+3. **Advanced MLX Optimizations**: Further optimize the MLX implementation with:
+   - Custom Metal kernels for specialized operations
+   - MLX's compilation capabilities for frequently used function patterns
+   - Advanced memory management techniques
 
-4. **Distributed Computing**: Enable processing across multiple machines for extremely large datasets
+4. **Hybrid CPU/GPU Approach**: Intelligently distribute workloads between CPU and GPU based on operation characteristics
+
+5. **Memory Optimization**: Reduce memory usage for very large datasets through:
+   - Streaming processing of large matrices
+   - Sparse matrix representations where appropriate
+   - Incremental computation strategies
+
+6. **Distributed Computing**: Enable processing across multiple machines for extremely large datasets
 
 ## Conclusion
 

@@ -430,6 +430,32 @@ def validate_sparse_matrix(adata: ad.AnnData, layer: Optional[str] = None) -> Tu
 
     return len(issues) == 0, issues
 
+def get_anndata_reference(expr_matrix: Union[np.ndarray, ad.AnnData]) -> Optional[ad.AnnData]:
+    """
+    Get the AnnData reference from an expression matrix or AnnData object.
+
+    Parameters
+    ----------
+    expr_matrix : Union[np.ndarray, ad.AnnData]
+        Expression matrix or AnnData object
+
+    Returns
+    -------
+    Optional[ad.AnnData]
+        AnnData reference if available, None otherwise
+    """
+    # If expr_matrix is already an AnnData object, return it
+    if isinstance(expr_matrix, ad.AnnData):
+        return expr_matrix
+
+    # If expr_matrix is a numpy array, check if it has an AnnData reference
+    if hasattr(expr_matrix, '_anndata_reference'):
+        return expr_matrix._anndata_reference
+
+    # Otherwise, return None
+    return None
+
+
 def recommend_preprocessing(adata: ad.AnnData) -> List[str]:
     """
     Recommend preprocessing steps based on data characteristics.

@@ -20,8 +20,7 @@ from .core import (
     viper_bootstrap as _viper_bootstrap,
     viper_null_model as _viper_null_model,
     viper_similarity as _viper_similarity,
-    viper_cluster as _viper_cluster,
-    viper_mlx as _viper_mlx
+    viper_cluster as _viper_cluster
 )
 
 # Configure logging
@@ -35,7 +34,6 @@ def viper(
     signature_method: str = 'rank',
     abs_score: bool = False,
     normalize: bool = True,
-    use_gpu: bool = False,
     validate: bool = True
 ) -> pd.DataFrame:
     """
@@ -66,8 +64,6 @@ def viper(
         Whether to use absolute values of the signatures
     normalize : bool, default=True
         Whether to normalize enrichment scores
-    use_gpu : bool, default=False
-        Whether to use GPU acceleration with MLX (if available)
     validate : bool, default=True
         Whether to validate the input data before running VIPER
 
@@ -125,23 +121,7 @@ def viper(
     if len(regulons) == 0:
         raise ValueError("No valid regulons provided.")
 
-    # Use GPU if requested
-    if use_gpu:
-        try:
-            return _viper_mlx(
-                adata,
-                regulons,
-                layer=layer,
-                signature_method=signature_method,
-                enrichment_method=method,
-                abs_score=abs_score,
-                normalize=normalize
-            )
-        except ImportError:
-            logger.warning("MLX not available. Falling back to CPU implementation.")
-            use_gpu = False
-
-    # Use CPU implementation
+    # Use Numba-accelerated implementation
     return _viper_scores(
         adata,
         regulons,
@@ -160,7 +140,6 @@ def metaviper(
     signature_method: str = 'rank',
     abs_score: bool = False,
     normalize: bool = True,
-    use_gpu: bool = False,
     weights: Optional[Dict[str, float]] = None,
     weight_method: str = 'equal',
     validate: bool = True
@@ -184,8 +163,7 @@ def metaviper(
         Whether to use absolute values of the signatures
     normalize : bool, default=True
         Whether to normalize enrichment scores
-    use_gpu : bool, default=False
-        Whether to use GPU acceleration with MLX (if available)
+
     weights : dict, optional
         Dictionary mapping set names to weights. If None, weights are determined by weight_method.
     weight_method : str, default='equal'
@@ -252,7 +230,6 @@ def metaviper(
             signature_method=signature_method,
             abs_score=abs_score,
             normalize=normalize,
-            use_gpu=use_gpu,
             validate=False  # Skip validation for individual VIPER calls since we already validated
         )
 

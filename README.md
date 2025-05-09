@@ -39,7 +39,7 @@ The repository is organized as follows:
 PySCES is currently in active development. The following components are implemented and functional:
 
 - ✅ **ARACNe Algorithm**: Core algorithm for inferring gene regulatory networks
-  - Mutual information calculation using Python implementation
+  - Numba-accelerated mutual information calculation
   - Data processing inequality (DPI) algorithm
   - Bootstrapping for network robustness
   - Consensus network generation
@@ -48,7 +48,7 @@ PySCES is currently in active development. The following components are implemen
 
 - ✅ **VIPER Algorithm**: Core algorithm for inferring protein activity
   - GeneSet and Regulon data structures
-  - Core VIPER functions (calculate_sig, viper_scores, viper_bootstrap, viper_null_model)
+  - Numba-accelerated VIPER functions (calculate_sig, viper_scores, viper_bootstrap, viper_null_model)
   - ARACNe integration (aracne_to_regulons, aracne_to_viper)
   - AnnData compatibility for single-cell analysis
   - Verified with real biological data from Tabula Sapiens

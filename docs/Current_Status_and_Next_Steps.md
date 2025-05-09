@@ -6,10 +6,10 @@ PySCES has successfully implemented a complete pipeline for single-cell regulato
 
 ### ARACNe Implementation
 
-- **Unified Interface**: Single `backend` parameter with options: 'auto', 'numba', 'pytorch', 'mlx', 'python'
-- **Automatic Backend Selection**: Detects the best available backend with intelligent fallback mechanism
+- **Streamlined Interface**: Single `backend` parameter with options: 'auto', 'numba', 'python'
+- **Automatic Backend Selection**: Detects Numba availability with fallback to Python implementation
 - **Stratification**: Separate parameters for tissue and cell type stratification with hierarchical processing
-- **Performance**: Numba implementation significantly outperforms other approaches
+- **Performance**: Numba implementation provides excellent performance across all platforms
 
 ### VIPER Implementation
 
@@ -109,9 +109,9 @@ Several areas need documentation updates and code consolidation:
    - Update type annotations to reflect NumPy 2.0 types
 
 2. **Backend Selection**:
-   - Consolidate backend selection logic in one place
-   - Improve error messages for unavailable backends
-   - Add more detailed logging for backend selection decisions
+   - Simplified to focus on Numba implementation
+   - Improved error messages when Numba is unavailable
+   - Added detailed logging for backend selection
 
 3. **Stratification Implementation**:
    - Consolidate stratification code between different implementations
@@ -155,6 +155,6 @@ Several areas need documentation updates and code consolidation:
 
 ## Conclusion
 
-PySCES has successfully implemented a complete, Numba-optimized pipeline for single-cell regulatory network analysis. The next phase focuses on testing with real datasets of varying sizes, implementing appropriate pre-processing, refining the stratification strategy, and improving documentation and code organization.
+PySCES has successfully implemented a complete, Numba-optimized pipeline for single-cell regulatory network analysis. By focusing on the Numba implementation, we've simplified the codebase while maintaining excellent performance across all platforms. The next phase focuses on testing with real datasets of varying sizes, implementing appropriate pre-processing, refining the stratification strategy, and improving documentation and code organization.
 
 The manual stratification approach has proven effective and will be further developed for production use with larger datasets. By processing each cell type separately, we can avoid memory issues and optimize performance for specific biological contexts.

@@ -58,6 +58,10 @@ A summary of the cleanup and organization of the PySCES repository. This documen
 
 A comprehensive documentation of the performance optimizations implemented in PySCES, including Numba acceleration for both ARACNe and VIPER algorithms, MLX integration for Apple Silicon, and detailed benchmarking results. This document explains how the optimizations work, why speedup increases with dataset size, and the practical impact for scientists analyzing large-scale single-cell datasets.
 
+### mlx_implementation_plan.md
+
+A detailed implementation plan for optimizing PySCES algorithms using MLX on Apple Silicon hardware. This document outlines the approach to leveraging MLX's lazy evaluation and unified memory architecture, implementation phases, optimization techniques, and expected challenges and solutions.
+
 ### images/
 
 A directory containing images used in the documentation and examples, including:

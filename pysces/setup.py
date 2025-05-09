@@ -94,8 +94,5 @@ setup(
             "cellxgene-census[experimental]>=0.2.1",
             "tiledb-soma",
         ],
-        "gpu": [
-            "torch>=2.0",
-        ],
     },
 )

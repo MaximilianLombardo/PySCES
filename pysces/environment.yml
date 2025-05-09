@@ -11,7 +11,6 @@ dependencies:
   - scikit-learn>=1.0
   - anndata>=0.8
   - scanpy>=1.9
-  - pytorch>=2.0
   - matplotlib>=3.5
   - seaborn>=0.12
   - pybind11>=2.10.0
@@ -20,7 +19,8 @@ dependencies:
   - sphinx>=5.0
   - jupyterlab
   - pip
-  # Optional dependencies for Census integration
+  # Optional dependencies for Census integration and acceleration
   - pip:
     - cellxgene-census[experimental]>=0.2.1
     - tiledb-soma
+    - numba>=0.56  # For performance optimization
