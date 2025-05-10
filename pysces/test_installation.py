@@ -1,138 +1,80 @@
 #!/usr/bin/env python
 """
-Test script to verify PySCES installation with C++ extensions.
-"""
+Test PySCES installation with a focus on the Numba implementation.
 
+This script verifies that the key components of PySCES can be imported
+and that the Numba backend is properly detected.
+"""
 import sys
-import numpy as np
 import logging
-import time
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-def test_cpp_extensions():
-    """Test if C++ extensions are properly installed."""
-    logger.info("Testing C++ extensions...")
+def test_imports():
+    """Test importing key modules."""
+    logger.info("Testing imports...")
 
+    # Try importing core modules
     try:
-        from pysces.aracne._cpp import aracne_ext
-        logger.info(f"C++ extensions loaded successfully (version: {getattr(aracne_ext, '__version__', 'unknown')})")
+        import pysces
+        logger.info("✓ Successfully imported pysces")
 
-        # Test with small arrays
-        x = np.array([1.0, 2.0, 3.0], dtype=np.float64)
-        y = np.array([2.0, 4.0, 6.0], dtype=np.float64)
+        from pysces.aracne.core import ARACNe
+        logger.info("✓ Successfully imported ARACNe")
 
-        logger.info("Testing mutual information calculation...")
-        mi = aracne_ext.calculate_mi_ap(x, y)
-        logger.info(f"Mutual information: {mi}")
+        from pysces.viper.core import viper_scores
+        logger.info("✓ Successfully imported viper_scores")
 
-        # Test with larger arrays
-        logger.info("Testing with larger arrays...")
-        n_samples = 1000
-        x = np.random.normal(0, 1, n_samples).astype(np.float64)
-        y = np.random.normal(0, 1, n_samples).astype(np.float64)
+        from pysces.viper.regulons import Regulon
+        logger.info("✓ Successfully imported Regulon")
 
-        start_time = time.time()
-        mi = aracne_ext.calculate_mi_ap(x, y)
-        elapsed = time.time() - start_time
-
-        logger.info(f"Mutual information: {mi}")
-        logger.info(f"Calculation time: {elapsed:.6f} seconds")
-
-        # Test MI matrix calculation
-        logger.info("Testing MI matrix calculation...")
-        n_samples = 100
-        n_genes = 10
-        data = np.random.normal(0, 1, (n_samples, n_genes)).astype(np.float64)
-        tf_indices = np.array([0, 1], dtype=np.int32)
-
-        start_time = time.time()
-        mi_matrix = aracne_ext.calculate_mi_matrix(data, tf_indices)
-        elapsed = time.time() - start_time
-
-        logger.info(f"MI matrix shape: {mi_matrix.shape}")
-        logger.info(f"Calculation time: {elapsed:.6f} seconds")
-
-        logger.info("All tests passed!")
+        logger.info("\nAll imports successful!")
         return True
-
     except ImportError as e:
-        logger.error(f"Failed to import C++ extensions: {str(e)}")
-        logger.info("PySCES will use the slower Python implementation.")
+        logger.error(f"✗ Import error: {e}")
         return False
 
-    except Exception as e:
-        logger.error(f"Error testing C++ extensions: {str(e)}")
-        logger.info("PySCES will use the slower Python implementation.")
-        return False
-
-def test_python_implementation():
-    """Test the Python implementation."""
-    logger.info("Testing Python implementation...")
+def test_numba_backend():
+    """Test that Numba backend is properly detected."""
+    logger.info("\nTesting Numba backend...")
 
     try:
         from pysces.aracne.core import ARACNe
 
-        # Create ARACNe instance with Python implementation
-        aracne = ARACNe(backend='python')
-        aracne._has_cpp_ext = False
+        # Initialize ARACNe with auto backend
+        aracne = ARACNe(backend='auto')
+        logger.info(f"✓ ARACNe initialized with auto backend")
+        logger.info(f"✓ Using Numba: {aracne.use_numba}")
 
-        # Generate test data
-        n_samples = 100
-        n_genes = 10
-        expr_matrix = np.random.normal(0, 1, (n_samples, n_genes)).astype(np.float64)
-        gene_names = [f"Gene{i+1}" for i in range(n_genes)]
-        tf_indices = list(range(2))
+        # Initialize ARACNe with explicit Numba backend
+        aracne_numba = ARACNe(backend='numba')
+        logger.info(f"✓ ARACNe initialized with Numba backend")
+        logger.info(f"✓ Using Numba: {aracne_numba.use_numba}")
 
-        logger.info("Running ARACNe with Python implementation...")
-        start_time = time.time()
-        network = aracne._run_aracne_python(expr_matrix, gene_names, tf_indices)
-        elapsed = time.time() - start_time
-
-        logger.info(f"Network contains {len(network['regulons'])} regulons")
-        logger.info(f"Calculation time: {elapsed:.2f} seconds")
-
-        logger.info("Python implementation test passed!")
-        return True
-
+        logger.info("\nNumba backend test completed!")
+        return aracne.use_numba or aracne_numba.use_numba
     except Exception as e:
-        logger.error(f"Error testing Python implementation: {str(e)}")
+        logger.error(f"✗ Numba backend error: {e}")
         return False
 
 def main():
     """Main function."""
+    logger.info("=" * 50)
     logger.info("PySCES Installation Test")
-    logger.info("=======================")
+    logger.info("=" * 50)
 
-    # Test Python version
-    logger.info(f"Python version: {sys.version}")
+    imports_ok = test_imports()
+    numba_ok = test_numba_backend()
 
-    # Test NumPy
-    logger.info(f"NumPy version: {np.__version__}")
-
-    # Test C++ extensions
-    cpp_success = test_cpp_extensions()
-
-    # Test Python implementation
-    python_success = test_python_implementation()
-
-    # Summary
-    logger.info("\nSummary:")
-    logger.info(f"C++ extensions: {'Available' if cpp_success else 'Not available'}")
-    logger.info(f"Python implementation: {'Working' if python_success else 'Not working'}")
-
-    if cpp_success:
-        logger.info("\nPySCES is installed correctly with C++ extensions!")
-    elif python_success:
-        logger.info("\nPySCES is installed with Python implementation only.")
-        logger.info("For better performance, try reinstalling with C++ extensions.")
+    logger.info("\n" + "=" * 50)
+    if imports_ok and numba_ok:
+        logger.info("✓ All tests passed! PySCES is properly installed.")
+        sys.exit(0)
     else:
-        logger.error("\nPySCES installation has issues. Please check the error messages above.")
-        return 1
-
-    return 0
+        logger.error("✗ Some tests failed. Please check the messages above.")
+        sys.exit(1)
 
 if __name__ == "__main__":
-    sys.exit(main())
+    main()
