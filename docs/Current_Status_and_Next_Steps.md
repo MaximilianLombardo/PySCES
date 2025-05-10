@@ -50,6 +50,12 @@ For each dataset, we will:
 - Validate results against expected biological patterns
 - Identify bottlenecks and optimization opportunities
 
+A comprehensive [Benchmarking Plan](Benchmarking_Plan.md) has been developed to guide this process, including:
+- Detailed benchmark metrics and methodologies
+- Dataset selection criteria
+- Analysis and visualization approaches
+- Timeline and resource requirements
+
 ### 2. Implement Appropriate Pre-processing
 
 We need to modify the pipeline to include appropriate pre-processing steps:
@@ -121,8 +127,9 @@ Several areas need documentation updates and code consolidation:
 
 4. **Benchmark Scripts**:
    - Further consolidate benchmark scripts
-   - Create standardized benchmark suite for Numba implementation
+   - Create standardized benchmark suite for Numba implementation as outlined in the [Benchmarking Plan](Benchmarking_Plan.md)
    - Add automated performance regression testing
+   - Implement comprehensive metrics collection and visualization
 
 5. **Error Handling**:
    - Standardize error messages
@@ -138,8 +145,9 @@ Several areas need documentation updates and code consolidation:
 
 1. **Week 1**: Run complete pipeline on real datasets
    - Set up test datasets of different sizes
-   - Create benchmark scripts for the complete pipeline
-   - Document performance characteristics
+   - Implement benchmark scripts following the [Benchmarking Plan](Benchmarking_Plan.md)
+   - Run benchmarks on small datasets
+   - Document initial performance characteristics
 
 2. **Week 2**: Implement pre-processing steps
    - Add data validation functions
