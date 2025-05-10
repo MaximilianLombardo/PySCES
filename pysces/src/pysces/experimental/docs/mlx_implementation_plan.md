@@ -1,4 +1,6 @@
-# MLX Implementation Plan for PySCES
+# MLX Implementation Plan for PySCES (Experimental)
+
+> **Note**: This is an experimental implementation that is not part of the main PySCES codebase. The primary implementation of PySCES uses Numba for acceleration, which provides excellent performance across all platforms. This MLX implementation is provided for research purposes and for users with Apple Silicon hardware who want to experiment with alternative acceleration approaches.
 
 This document outlines the detailed implementation plan for optimizing PySCES algorithms using MLX on Apple Silicon hardware.
 
@@ -125,7 +127,7 @@ Integrate MLX-optimized implementations into the main pipeline:
    def run_algorithm(adata, **kwargs):
        """Run algorithm with automatic acceleration selection."""
        has_mlx, mx = initialize_mlx()
-       
+
        if has_mlx and is_apple_silicon():
            # Use MLX implementation
            return run_algorithm_mlx(adata, **kwargs)
@@ -209,31 +211,31 @@ Implement comprehensive benchmarks to compare performance:
 def benchmark_implementations(dataset_sizes, **kwargs):
     """Benchmark different implementations."""
     results = []
-    
+
     for n_cells, n_genes, n_tfs in dataset_sizes:
         # Create synthetic dataset
         adata = create_synthetic_dataset(n_cells, n_genes, n_tfs)
-        
+
         # Benchmark Python implementation
         start_time = time.time()
         result_python = run_algorithm_python(adata, **kwargs)
         python_time = time.time() - start_time
-        
+
         # Benchmark Numba implementation
         start_time = time.time()
         result_numba = run_algorithm_numba(adata, **kwargs)
         numba_time = time.time() - start_time
-        
+
         # Benchmark MLX implementation
         start_time = time.time()
         result_mlx = run_algorithm_mlx(adata, **kwargs)
         mlx_time = time.time() - start_time
-        
+
         # Calculate speedups
         python_numba_speedup = python_time / numba_time
         python_mlx_speedup = python_time / mlx_time
         numba_mlx_speedup = numba_time / mlx_time
-        
+
         results.append({
             "dataset_size": (n_cells, n_genes, n_tfs),
             "python_time": python_time,
@@ -243,7 +245,7 @@ def benchmark_implementations(dataset_sizes, **kwargs):
             "python_mlx_speedup": python_mlx_speedup,
             "numba_mlx_speedup": numba_mlx_speedup
         })
-    
+
     return results
 ```
 
@@ -257,12 +259,12 @@ def validate_implementations(dataset_sizes, **kwargs):
     for n_cells, n_genes, n_tfs in dataset_sizes:
         # Create synthetic dataset
         adata = create_synthetic_dataset(n_cells, n_genes, n_tfs)
-        
+
         # Run different implementations
         result_python = run_algorithm_python(adata, **kwargs)
         result_numba = run_algorithm_numba(adata, **kwargs)
         result_mlx = run_algorithm_mlx(adata, **kwargs)
-        
+
         # Compare results
         np.testing.assert_allclose(result_python, result_numba, rtol=1e-5, atol=1e-8)
         np.testing.assert_allclose(result_python, result_mlx, rtol=1e-5, atol=1e-8)

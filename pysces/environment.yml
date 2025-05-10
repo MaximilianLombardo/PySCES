@@ -13,14 +13,12 @@ dependencies:
   - scanpy>=1.9
   - matplotlib>=3.5
   - seaborn>=0.12
-  - pybind11>=2.10.0
-  - cmake>=3.24
+  - numba>=0.56  # Required for performance optimization
   - pytest>=7.0
   - sphinx>=5.0
   - jupyterlab
   - pip
-  # Optional dependencies for Census integration and acceleration
+  # Optional dependencies for Census integration
   - pip:
     - cellxgene-census[experimental]>=0.2.1
     - tiledb-soma
-    - numba>=0.56  # For performance optimization

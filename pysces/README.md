@@ -10,8 +10,8 @@ PySCES is a Python port of the PISCES single-cell regulatory-network pipeline, w
 - **VIPER/metaVIPER**: Infer protein activity from gene expression and regulatory networks
 - **CELLxGENE Census Integration**: Directly load and process data from the CELLxGENE Census
 - **Analysis Tools**: Clustering, master regulator identification, and visualization
-- **High Performance**: C++ extensions with OpenMP parallelization for performance-critical operations
-- **GPU Acceleration**: Optional GPU support for performance-critical operations (coming soon)
+- **High Performance**: Numba-accelerated implementation for performance-critical operations
+- **Cross-Platform Compatibility**: Works on all platforms without specialized hardware requirements
 
 ## Installation
 
@@ -41,13 +41,6 @@ pip install -e ".[census]"
 
 Alternatively, you can edit the `environment.yml` file to uncomment the Census dependencies before creating the conda environment.
 
-### With GPU Support (Coming Soon)
-
-```bash
-# Install with GPU support
-pip install -e ".[gpu]"
-```
-
 ## Quick Start
 
 ```python
@@ -56,7 +49,7 @@ import anndata as ad
 
 # Load data
 adata = pysces.read_census_direct(
-    "homo_sapiens", 
+    "homo_sapiens",
     obs_value_filter="tissue_general == 'blood'",
     census_version="latest"
 )
@@ -87,14 +80,14 @@ mrs = pysces.identify_mrs(activity, adata.obs["clusters"])
 
 ## ARACNe Implementation
 
-The ARACNe algorithm in PySCES is being implemented using C++ extensions with OpenMP parallelization. The implementation plan includes:
+The ARACNe algorithm in PySCES is implemented using Numba for high-performance computation. The implementation includes:
 
-1. **Mutual Information Calculation**: Using adaptive partitioning algorithm for accurate MI estimation
+1. **Mutual Information Calculation**: Efficient calculation of mutual information between gene pairs
 2. **Data Processing Inequality (DPI)**: Removing indirect interactions from the network
 3. **Bootstrapping**: Improving network robustness through multiple bootstrap iterations
 4. **Consensus Network**: Aggregating results from bootstrap iterations
 
-> **Note**: The C++ implementation is currently in progress. The current version provides a framework with placeholder implementations that will be replaced with optimized C++ code.
+> **Note**: The Numba implementation provides excellent performance across all platforms without requiring specialized hardware.
 
 ### ARACNe Parameters
 
@@ -103,7 +96,7 @@ The ARACNe algorithm in PySCES is being implemented using C++ extensions with Op
 - `dpi_tolerance`: Tolerance for Data Processing Inequality
 - `consensus_threshold`: Threshold for consensus network (fraction of bootstrap networks)
 - `n_threads`: Number of threads to use (0 = auto)
-- `use_gpu`: Whether to use GPU acceleration (if available)
+- `backend`: Computation backend to use ('auto', 'numba', 'python')
 
 ## Documentation
 
@@ -123,16 +116,20 @@ pysces/
 │       │   ├── census.py        # Census integration
 │       │   └── preprocessing.py # Data preprocessing
 │       ├── aracne/              # ARACNe implementation
-│       │   ├── core.py          # Python interface
-│       │   └── _cpp/            # C++ extensions
+│       │   ├── core.py          # Main interface
+│       │   └── numba_optimized.py # Numba-accelerated functions
 │       ├── viper/               # VIPER implementation
 │       │   ├── regulons.py      # Regulon handling
-│       │   └── activity.py      # Activity inference
+│       │   ├── core.py          # Main interface
+│       │   └── numba_optimized.py # Numba-accelerated functions
 │       ├── analysis/            # Analysis tools
 │       │   ├── clustering.py    # Clustering methods
 │       │   └── master_regulators.py # MR identification
-│       └── plotting/            # Visualization
-│           └── plots.py         # Standard plots
+│       ├── plotting/            # Visualization
+│       │   └── plots.py         # Standard plots
+│       └── experimental/        # Experimental implementations
+│           ├── aracne/          # Alternative ARACNe implementations
+│           └── viper/           # Alternative VIPER implementations
 ├── tests/                       # Test suite
 ├── examples/                    # Example notebooks
 ├── docs/                        # Documentation
@@ -148,20 +145,21 @@ PySCES is currently in active development. The following components are implemen
 
 - [x] Data loading and preprocessing
 - [x] Census integration with direct loading approach
-- [x] Basic ARACNe framework with C++ extension structure
-- [x] VIPER implementation
+- [x] Numba-accelerated ARACNe implementation
+- [x] Numba-accelerated VIPER implementation
 - [x] Analysis tools (clustering, master regulators)
 - [x] Visualization
 - [x] Basic test suite
 - [x] Modern package structure with src layout
+- [x] Experimental implementations directory for alternative approaches
 
 The following components are in progress or pending:
 
-- [ ] Complete ARACNe C++ implementation
-- [ ] Fix batch processing approach for Census data
-- [ ] GPU acceleration
+- [ ] Improved stratification for large datasets
+- [ ] Enhanced data validation and preprocessing
 - [ ] Comprehensive documentation
 - [ ] Comprehensive test suite
+- [ ] Performance optimization for very large datasets
 
 For a detailed breakdown of the project status, see the [Project Status](../docs/PySCES_Project_Status.md) document.
 

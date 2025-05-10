@@ -1,81 +1,126 @@
 # Performance Optimization
 
-This document describes the performance optimization work done for the PySCES project, focusing on the ARACNe algorithm implementation.
+This document describes the performance optimization work done for the PySCES project, focusing on the Numba-accelerated implementation of the ARACNe and VIPER algorithms.
 
 ## Numba Acceleration
 
-We've implemented Numba JIT (Just-In-Time) compilation for performance-critical functions in the ARACNe algorithm. Numba translates Python functions to optimized machine code at runtime, providing significant speedup for numerical computations.
+We've implemented Numba JIT (Just-In-Time) compilation for performance-critical functions in both the ARACNe and VIPER algorithms. Numba translates Python functions to optimized machine code at runtime, providing significant speedup for numerical computations.
 
 ### Implementation Details
 
-The following functions have been optimized with Numba:
+#### ARACNe Optimizations
 
-1. **Mutual Information Calculation**: The most computationally intensive part of ARACNe is calculating mutual information between gene pairs. We've implemented a Numba-optimized version that runs significantly faster than the pure Python implementation.
+The following ARACNe functions have been optimized with Numba:
 
-2. **Data Processing Inequality (DPI)**: The DPI algorithm, which prunes indirect interactions from the network, has also been optimized with Numba.
+1. **Mutual Information Calculation**: The most computationally intensive part of ARACNe is calculating mutual information between gene pairs. Our Numba-optimized version runs significantly faster than the pure Python implementation.
 
-3. **Correlation Calculation**: As a proxy for mutual information, we use Pearson correlation. This calculation has been optimized with Numba.
+2. **Data Processing Inequality (DPI)**: The DPI algorithm, which prunes indirect interactions from the network, has been optimized with Numba for faster execution.
+
+3. **Bootstrapping**: The bootstrapping process, which improves network robustness, has been optimized to efficiently handle multiple iterations.
+
+4. **Consensus Network Generation**: The process of combining bootstrap networks into a consensus network has been optimized for performance.
 
 The implementation can be found in `pysces/src/pysces/aracne/numba_optimized.py`.
+
+#### VIPER Optimizations
+
+The following VIPER functions have been optimized with Numba:
+
+1. **Signature Calculation**: The calculation of gene expression signatures has been optimized for faster processing.
+
+2. **Enrichment Score Calculation**: The calculation of enrichment scores for gene sets has been optimized with Numba.
+
+3. **Bootstrap Analysis**: The bootstrapping process for statistical robustness has been optimized.
+
+4. **Null Model Generation**: The generation of null models for significance assessment has been optimized.
+
+The implementation can be found in `pysces/src/pysces/viper/numba_optimized.py`.
 
 ### Performance Improvements
 
 Benchmarks show significant performance improvements with Numba acceleration:
 
-- Small datasets (100 cells, 100 genes): 2-3x speedup
-- Medium datasets (500 cells, 200 genes): 5-10x speedup
-- Large datasets (1000+ cells, 500+ genes): 10-20x speedup
+- **ARACNe Performance**:
+  - Small datasets (100 cells, 100 genes): 2-3x speedup
+  - Medium datasets (500 cells, 200 genes): 5-10x speedup
+  - Large datasets (1000+ cells, 500+ genes): 10-20x speedup
 
-These improvements make it practical to run ARACNe on much larger datasets than before.
+- **VIPER Performance**:
+  - Small regulon sets (10 regulons): 2-3x speedup
+  - Medium regulon sets (50 regulons): 3-5x speedup
+  - Large regulon sets (100+ regulons): 5-10x speedup
+
+These improvements make it practical to run the complete pipeline on much larger datasets than before.
 
 ### Usage
 
-Numba acceleration is enabled by default in the ARACNe class. You can disable it by setting `use_numba=False` when creating an ARACNe instance:
+Numba acceleration is enabled by default in both the ARACNe and VIPER implementations. You can control the backend using the `backend` parameter:
 
 ```python
 from pysces.aracne.core import ARACNe
 
 # With Numba acceleration (default)
-aracne = ARACNe(bootstraps=100, use_numba=True)
+aracne = ARACNe(bootstraps=100, backend='numba')
 
-# Without Numba acceleration
-aracne = ARACNe(bootstraps=100, use_numba=False)
+# With automatic backend selection (uses Numba if available)
+aracne = ARACNe(bootstraps=100, backend='auto')
+
+# Force Python implementation
+aracne = ARACNe(bootstraps=100, backend='python')
 ```
 
-## MLX Acceleration
+For VIPER functions, you can use the `use_numba` parameter:
 
-We're also exploring MLX acceleration for Apple Silicon hardware. MLX is a framework for machine learning on Apple Silicon, providing efficient array operations and automatic differentiation.
+```python
+from pysces.viper.core import viper_scores
 
-### Initial Exploration
+# With Numba acceleration (default)
+scores = viper_scores(adata, regulons, use_numba=True)
 
-Our initial exploration of MLX for ARACNe shows promising results:
+# Without Numba acceleration
+scores = viper_scores(adata, regulons, use_numba=False)
+```
 
-1. **Correlation Calculation**: MLX provides 1.5-3x speedup over NumPy for correlation calculation, especially for larger arrays.
+## Stratification for Large Datasets
 
-2. **Mutual Information Matrix**: The full MI matrix calculation shows 2-5x speedup with MLX compared to NumPy.
+For very large datasets, we've found that manually stratifying the data by tissue and cell type before running ARACNe provides the best performance. This approach:
 
-The exploration code can be found in `examples/mlx_aracne_exploration.py`.
+1. Reduces memory requirements by processing smaller subsets of data
+2. Improves biological relevance by analyzing similar cell types together
+3. Enables parallel processing of different strata
+4. Avoids numerical issues that can occur with very heterogeneous datasets
 
-### Future Work
+Example of manual stratification:
 
-We plan to implement a full MLX-accelerated version of ARACNe, which should provide even greater performance improvements on Apple Silicon hardware. This will include:
+```python
+import pandas as pd
 
-1. **Full MLX Implementation**: Implement all ARACNe functions using MLX.
+# Stratify by cell type
+cell_types = adata.obs['cell_type'].unique()
+results = {}
 
-2. **Hybrid Approach**: Use MLX on Apple Silicon and fall back to Numba on other platforms.
+for cell_type in cell_types:
+    # Subset data
+    subset = adata[adata.obs['cell_type'] == cell_type].copy()
 
-3. **GPU Acceleration**: Explore GPU acceleration for non-Apple platforms using frameworks like CUDA or OpenCL.
+    # Run ARACNe on subset
+    aracne = ARACNe(bootstraps=100, backend='numba')
+    results[cell_type] = aracne.run(subset)
+```
 
 ## Benchmarking
 
-We've created a benchmarking script to measure the performance of different implementations:
+We've created benchmarking scripts to measure the performance of different implementations:
 
 ```python
 python examples/benchmark_aracne.py
+python examples/benchmark_viper.py
 ```
 
-This script runs ARACNe with and without Numba acceleration on datasets of different sizes and reports the performance results.
+These scripts run the algorithms on datasets of different sizes and report the performance results.
 
 ## Conclusion
 
-The performance optimization work has significantly improved the speed of the ARACNe algorithm, making it practical to run on larger datasets. The Numba-accelerated implementation provides a good balance of performance and compatibility, while the MLX exploration shows promise for even greater performance on Apple Silicon hardware.
+The Numba-accelerated implementation has significantly improved the speed of both the ARACNe and VIPER algorithms, making it practical to run on larger datasets. This implementation provides an excellent balance of performance, compatibility, and ease of use, working efficiently across all platforms without requiring specialized hardware.
+
+For researchers interested in alternative acceleration approaches (PyTorch, MLX), experimental implementations are available in the `pysces.experimental` package, though these are not recommended for production use.

@@ -8,7 +8,7 @@ The repository is organized as follows:
 
 ### Main Package
 
-- **[pysces/](pysces/)**: The main PySCES package, containing the Python implementation of the PISCES pipeline.
+- **[pysces/](pysces/)**: The main PySCES package, containing the Numba-accelerated implementation of the PISCES pipeline.
   - See the [PySCES README](pysces/README.md) for detailed information about the package, including installation instructions, usage examples, and development status.
 
 ### Documentation
@@ -23,16 +23,21 @@ The repository is organized as follows:
 
 - **[references/](references/)**: Reference implementations and resources used as inspiration and guidance for the PySCES project.
   - PISCES: Original R implementation of the PISCES pipeline.
-  - GPU-ARACNE: CUDA implementation of the ARACNe algorithm.
   - single-cell-pipeline: Pipeline for single-cell analysis.
   - TileDB-SOMA: Storage format for single-cell data.
   - cellxgene-census: Documentation for CELLxGENE Census data access.
   - See the [References README](references/README.md) for detailed information about each reference implementation.
 
+### Experimental Implementations
+
+- **[pysces/src/pysces/experimental/](pysces/src/pysces/experimental/)**: Alternative implementations that were explored during development but are not part of the main codebase.
+  - PyTorch-based implementations
+  - MLX-optimized implementations for Apple Silicon
+  - See the [Experimental README](pysces/src/pysces/experimental/README.md) for more information.
+
 ### Archive
 
 - **[archive/](archive/)**: Archived files and documents that are no longer actively used but are kept for reference.
-  - [debug_scripts/](archive/debug_scripts/): Archived debug and test scripts related to the C++ extensions.
 
 ## Current Status
 
@@ -72,6 +77,11 @@ PySCES is currently in active development. The following components are implemen
   - Network visualization utilities
   - Protein activity visualization
 
+- ✅ **Experimental Implementations**: Alternative implementations for research purposes
+  - PyTorch-based implementations
+  - MLX-optimized implementations for Apple Silicon
+  - Moved to experimental directory for reference
+
 ## Current Development Focus
 
 We are currently focusing on the following areas:
@@ -82,9 +92,11 @@ We are currently focusing on the following areas:
 
 3. **Manual Stratification Strategy**: Refining our approach to manually stratify data by cell type, which has proven to be the most effective approach for large datasets.
 
-4. **Documentation and Code Cleanup**: Updating documentation to reflect the current status and plan, and cleaning up code to improve maintainability and performance.
+4. **Documentation and Code Cleanup**: Updating documentation to reflect the Numba-focused architecture, and cleaning up code to improve maintainability and performance.
 
 5. **NumPy 2.0 Compatibility**: Replacing temporary monkey patches with proper type handling throughout the codebase.
+
+6. **Performance Optimization**: Further optimizing the Numba implementation for very large datasets.
 
 For a detailed breakdown of the project status and next steps, see the [Current Status and Next Steps](docs/Current_Status_and_Next_Steps.md) document.
 
@@ -106,7 +118,12 @@ To get started with the PySCES project, follow these steps:
    pip install -e .
    ```
 
-3. **Run the example scripts**:
+3. **Verify the installation**:
+   ```bash
+   python -c "import pysces; import numba; print(f'PySCES installed, Numba version: {numba.__version__}')"
+   ```
+
+4. **Run the example scripts**:
    ```bash
    python examples/test_installation.py
    python examples/pipeline_validation_test_direct.py

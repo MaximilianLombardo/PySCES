@@ -6,10 +6,11 @@ PySCES has successfully implemented a complete pipeline for single-cell regulato
 
 ### ARACNe Implementation
 
+- **Numba-Accelerated Core**: High-performance implementation using Numba JIT compilation
 - **Streamlined Interface**: Single `backend` parameter with options: 'auto', 'numba', 'python'
 - **Automatic Backend Selection**: Detects Numba availability with fallback to Python implementation
 - **Stratification**: Separate parameters for tissue and cell type stratification with hierarchical processing
-- **Performance**: Numba implementation provides excellent performance across all platforms
+- **Cross-Platform Performance**: Numba implementation provides excellent performance across all platforms without specialized hardware
 
 ### VIPER Implementation
 
@@ -108,10 +109,10 @@ Several areas need documentation updates and code consolidation:
    - Replace `np.float_` monkey patch with proper `np.float64` usage throughout the codebase
    - Update type annotations to reflect NumPy 2.0 types
 
-2. **Backend Selection**:
-   - Simplified to focus on Numba implementation
-   - Improved error messages when Numba is unavailable
-   - Added detailed logging for backend selection
+2. **Documentation Updates**:
+   - Update all documentation to reflect the Numba-focused architecture
+   - Create comprehensive API reference for Numba-accelerated functions
+   - Add examples of using the Numba backend effectively
 
 3. **Stratification Implementation**:
    - Consolidate stratification code between different implementations
@@ -120,13 +121,18 @@ Several areas need documentation updates and code consolidation:
 
 4. **Benchmark Scripts**:
    - Further consolidate benchmark scripts
-   - Create standardized benchmark suite
+   - Create standardized benchmark suite for Numba implementation
    - Add automated performance regression testing
 
 5. **Error Handling**:
    - Standardize error messages
    - Improve error recovery
    - Add more informative debugging information
+
+6. **Experimental Directory**:
+   - Ensure all alternative implementations are properly documented
+   - Add clear warnings about experimental status
+   - Provide examples of when to use experimental implementations
 
 ## Implementation Plan
 
