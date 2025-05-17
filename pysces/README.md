@@ -57,6 +57,9 @@ adata = pysces.read_census_direct(
 # Preprocess data
 adata = pysces.preprocess_data(adata)
 
+# Alternatively, you can use SCTransform normalization
+# adata = pysces.preprocess_data(adata, norm_method="sctransform")
+
 # Run ARACNe
 aracne = pysces.ARACNe(
     p_value=1e-8,              # P-value threshold for MI significance

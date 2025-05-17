@@ -16,7 +16,8 @@ def preprocess_data(
     min_counts: Optional[int] = None,
     max_pct_mito: Optional[float] = None,
     normalize: bool = True,
-    log_transform: bool = False
+    log_transform: bool = False,
+    norm_method: str = "cpm",
 ) -> ad.AnnData:
     """
     Run standard preprocessing pipeline on AnnData object.
@@ -39,6 +40,10 @@ def preprocess_data(
         Whether to normalize the data to CPM (counts per million)
     log_transform : bool, default=False
         Whether to log-transform the data after normalization
+    norm_method : {"cpm", "sctransform"}, default="cpm"
+        Normalization method to apply. ``"cpm"`` performs counts-per-million
+        normalization while ``"sctransform"`` uses the SCTransform algorithm
+        via ``scanpy.experimental.pp.normalize_sctransform``.
         
     Returns
     -------
@@ -49,6 +54,7 @@ def preprocess_data(
     >>> import pysces
     >>> adata = pysces.read_census("homo_sapiens", max_cells=1000)
     >>> adata = pysces.preprocess_data(adata, max_pct_mito=10)
+    >>> adata_sct = pysces.preprocess_data(adata, norm_method="sctransform")
     """
     # Make a copy to avoid modifying the original
     adata = adata.copy()
@@ -79,8 +85,19 @@ def preprocess_data(
     
     # Normalize
     if normalize:
-        sc.pp.normalize_total(adata, target_sum=1e6)  # CPM normalization
-        # Store raw counts
+        if norm_method == "cpm":
+            sc.pp.normalize_total(adata, target_sum=1e6)
+        elif norm_method == "sctransform":
+            try:
+                from scanpy.experimental.pp import normalize_sctransform
+            except Exception as e:
+                raise ImportError(
+                    "scanpy with experimental SCTransform support is required for norm_method='sctransform'"
+                ) from e
+            normalize_sctransform(adata)
+        else:
+            raise ValueError("norm_method must be 'cpm' or 'sctransform'")
+        # Store normalized counts
         adata.layers['counts'] = adata.X.copy()
     
     # Log transform
