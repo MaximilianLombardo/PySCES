@@ -68,8 +68,8 @@ def main():
         adata = adata[:, gene_indices]
 
     # Preprocess the data
-    print("Preprocessing data...")
-    adata = preprocess_data(adata)
+    print("Preprocessing data with SCTransform...")
+    adata = preprocess_data(adata, norm_method="sctransform")
 
     # Get a list of transcription factors
     print("Loading transcription factors...")
